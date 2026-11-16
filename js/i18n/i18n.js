@@ -78,10 +78,22 @@ class I18nService {
   applyToDOM() {
     document.documentElement.lang = this.lang;
 
+    const titleKey = document.body?.dataset?.titleKey;
+    if (titleKey && this.hasKey(titleKey)) {
+      document.title = this.t(titleKey);
+    }
+
     document.querySelectorAll('[data-i18n]').forEach((el) => {
       const key = el.dataset.i18n;
       if (this.hasKey(key)) {
         el.textContent = this.t(key);
+      }
+    });
+
+    document.querySelectorAll('[data-i18n-html]').forEach((el) => {
+      const key = el.dataset.i18nHtml;
+      if (this.hasKey(key)) {
+        el.innerHTML = this.t(key);
       }
     });
 

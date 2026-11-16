@@ -2,11 +2,47 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>WASM Camera Studio — WebRTC &amp; WebAssembly カメラアプリ</title>
   <meta name="description" content="ブラウザ上の WebRTC と WebAssembly (FFmpeg.wasm) で完結する静的カメラアプリ。リア・フロントカメラ切替、マルチカメラ端末対応、写真・動画撮影、MP4/GIF/WebP/JPEG/PNG変換に対応。" />
+  <meta name="author" content="MotoYucchi" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <meta name="theme-color" content="#0d0f12" />
+  <link rel="canonical" href="https://cam.qch.jp/" />
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://cam.qch.jp/" />
+  <meta property="og:site_name" content="WASM Camera Studio" />
+  <meta property="og:title" content="WASM Camera Studio by MotoYucchi — WebRTC &amp; WebAssembly カメラアプリ" />
+  <meta property="og:description" content="100%ブラウザ完結のWebAssemblyカメラアプリ。リア・フロント切替、マルチカメラ対応、写真・動画撮影＆MP4/GIF/WebP変換。" />
+  <meta property="og:locale" content="ja_JP" />
+  <meta property="og:locale:alternate" content="en_US" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="WASM Camera Studio by MotoYucchi" />
+  <meta name="twitter:description" content="100%ブラウザ完結のWebAssemblyカメラアプリ。リア・フロント切替、マルチカメラ対応、MP4/GIF/WebP変換。" />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "WASM Camera Studio",
+    "url": "https://cam.qch.jp/",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any (Web Browser with WebRTC & WebAssembly)",
+    "inLanguage": ["ja", "en"],
+    "isAccessibleForFree": true,
+    "author": {
+      "@type": "Person",
+      "name": "MotoYucchi",
+      "url": "https://github.com/MotoYucchi"
+    }
+  }
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,9 +53,9 @@
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/modals.css" />
 </head>
-<body>
+<body class="camera-page">
   <div class="app-shell">
-    <!-- Header -->
+    <!-- Desktop Header -->
     <header class="app-header">
       <div class="header-inner">
         <div class="brand">
@@ -52,138 +88,147 @@
     </header>
 
     <main class="app-main">
-      <!-- Camera Stage & Controls -->
-      <div class="camera-workspace">
-        <!-- Viewfinder Panel -->
-        <section class="panel viewfinder-panel" aria-label="Camera Viewfinder">
-          <div class="viewfinder-stage">
-            <video id="vf-video" class="viewfinder-video" autoplay playsinline muted></video>
-            <div id="vf-grid" class="grid-overlay"></div>
+      <!-- Immersive Camera Stage -->
+      <section class="panel camera-stage-card" aria-label="Camera Studio">
+        <!-- Top Minimal Icon Toolbar -->
+        <div class="camera-top-bar">
+          <div class="top-bar-group">
+            <button id="btn-top-wasm" class="icon-btn icon-btn-round" type="button" data-tip-key="tip.preloadWasm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+            </button>
+            <button id="btn-top-timer" class="icon-btn icon-btn-round" type="button" data-tip-key="tip.timer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="13" r="8" />
+                <path d="M12 9v4l2 2" />
+                <path d="M9 2h6" />
+              </svg>
+            </button>
+            <button id="btn-top-grid" class="icon-btn icon-btn-round" type="button" data-tip-key="tip.grid">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="9" y1="3" x2="9" y2="21" />
+                <line x1="15" y1="3" x2="15" y2="21" />
+                <line x1="3" y1="9" x2="21" y2="9" />
+                <line x1="3" y1="15" x2="21" y2="15" />
+              </svg>
+            </button>
+            <button id="btn-top-mirror" class="icon-btn icon-btn-round" type="button" data-tip-key="tip.mirror">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3" />
+                <path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3" />
+                <line x1="12" y1="2" x2="12" y2="22" />
+              </svg>
+            </button>
+          </div>
 
-            <div class="vf-hud-top">
-              <span id="vf-res-badge" class="vf-pill mono hidden">1920×1080</span>
-              <span id="vf-rec-badge" class="vf-pill vf-rec-pill mono hidden">
-                <span class="rec-dot"></span>
-                <span>REC</span>
-                <span id="vf-rec-time">00:00</span>
-              </span>
+          <div class="top-bar-group">
+            <span id="vf-res-badge" class="vf-pill mono hidden">1920×1080</span>
+            <span id="vf-rec-badge" class="vf-pill vf-rec-pill mono hidden">
+              <span class="rec-dot"></span>
+              <span>REC</span>
+              <span id="vf-rec-time">00:00</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Viewfinder -->
+        <div class="viewfinder-stage">
+          <video id="vf-video" class="viewfinder-video" autoplay playsinline muted></video>
+          <div id="vf-grid" class="grid-overlay"></div>
+          <div class="vf-focus-ring" aria-hidden="true"></div>
+
+          <!-- Floating Multi-Camera Lens Pill -->
+          <div id="vf-lens-bar" class="vf-lens-bar hidden" aria-label="Multi-camera selector"></div>
+
+          <div id="vf-countdown" class="countdown-overlay hidden">3</div>
+          <div id="vf-flash" class="flash-overlay"></div>
+
+          <div id="vf-placeholder" class="viewfinder-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            <p id="vf-placeholder-title" class="placeholder-title" data-i18n="vf.noCameraTitle">カメラを起動してください</p>
+            <p id="vf-placeholder-desc" class="placeholder-desc" data-i18n="vf.noCameraDesc">ブラウザのカメラ権限を許可すると、プレビューとマルチカメラ切り替えが有効になります。</p>
+            <button id="btn-start-camera" class="btn btn-primary" type="button" data-i18n="vf.startCamera">
+              カメラを起動
+            </button>
+          </div>
+        </div>
+
+        <!-- Shutter & Bottom Icon Deck -->
+        <div class="camera-controls-deck">
+          <div class="shutter-row">
+            <div class="shutter-left">
+              <button id="btn-gallery-thumb" class="gallery-thumb-btn" type="button" data-tip-key="tip.gallery">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+              </button>
             </div>
 
-            <div id="vf-countdown" class="countdown-overlay hidden">3</div>
-            <div id="vf-flash" class="flash-overlay"></div>
+            <button id="btn-shutter" class="shutter-btn" type="button" disabled data-tip-key="tip.shutter">
+              <span class="shutter-inner"></span>
+            </button>
 
-            <div id="vf-placeholder" class="viewfinder-placeholder">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
-              <p id="vf-placeholder-title" class="placeholder-title" data-i18n="vf.noCameraTitle">カメラを起動してください</p>
-              <p id="vf-placeholder-desc" class="placeholder-desc" data-i18n="vf.noCameraDesc">ブラウザのカメラ権限を許可すると、プレビューとマルチカメラ切り替えが有効になります。</p>
-              <button id="btn-start-camera" class="btn btn-primary" type="button" data-i18n="vf.startCamera">
-                カメラを起動
+            <div class="shutter-right">
+              <button id="btn-switch-facing" class="icon-btn flip-square-btn" type="button" disabled data-tip-key="tip.flip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 2v6h-6" />
+                  <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                  <path d="M3 22v-6h6" />
+                  <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                </svg>
               </button>
             </div>
           </div>
 
-          <div class="shutter-bar">
+          <div class="camera-bottom-bar">
+            <button id="btn-open-settings" class="icon-btn icon-btn-round" type="button" data-tip-key="tip.settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </button>
+
             <div class="mode-tabs" role="tablist">
-              <button id="btn-mode-photo" class="mode-tab active" type="button" data-i18n="vf.modePhoto">写真</button>
-              <button id="btn-mode-video" class="mode-tab" type="button" data-i18n="vf.modeVideo">動画</button>
-            </div>
-
-            <div class="shutter-center">
-              <button id="btn-shutter" class="shutter-btn" type="button" disabled aria-label="Shutter">
-                <span class="shutter-inner"></span>
+              <button id="btn-mode-photo" class="mode-tab active" type="button" data-tip-key="tip.modePhoto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </button>
+              <button id="btn-mode-video" class="mode-tab" type="button" data-tip-key="tip.modeVideo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="23 7 16 12 23 17 23 7" />
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                </svg>
               </button>
             </div>
 
-            <button id="btn-switch-facing" class="btn btn-secondary btn-sm" type="button" disabled>
-              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 2v6h-6" />
-                <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
-                <path d="M3 22v-6h6" />
-                <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+            <button id="btn-open-quick" class="icon-btn icon-btn-round" type="button" data-tip-key="tip.quickSheet">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="21" x2="4" y2="14" />
+                <line x1="4" y1="10" x2="4" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12" y2="3" />
+                <line x1="20" y1="21" x2="20" y2="16" />
+                <line x1="20" y1="12" x2="20" y2="3" />
+                <line x1="1" y1="14" x2="7" y2="14" />
+                <line x1="9" y1="8" x2="15" y2="8" />
+                <line x1="17" y1="16" x2="23" y2="16" />
               </svg>
-              <span data-i18n="vf.switchFacing">リア / フロント切替</span>
             </button>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <!-- Controls Sidebar -->
-        <aside class="panel controls-panel" aria-label="Camera Controls">
-          <div class="control-section">
-            <span class="section-label" data-i18n="ctrl.cameraSection">カメラデバイス・切り替え</span>
-            <div class="field-group">
-              <label for="ctrl-device" class="field-label" data-i18n="ctrl.deviceLabel">使用カメラ (マルチカメラ対応)</label>
-              <div class="camera-switch-row">
-                <select id="ctrl-device" class="select-control" disabled></select>
-                <button id="btn-refresh-devices" class="btn btn-secondary btn-sm" type="button" data-i18n="ctrl.refreshDevices">再検出</button>
-              </div>
-            </div>
-
-            <button id="btn-ctrl-flip" class="btn btn-secondary btn-sm" type="button" disabled data-i18n="vf.switchFacing">
-              リア / フロント切替
-            </button>
-
-            <div class="control-grid-2">
-              <div class="field-group">
-                <label for="ctrl-resolution" class="field-label" data-i18n="ctrl.resolution">解像度</label>
-                <select id="ctrl-resolution" class="select-control"></select>
-              </div>
-              <div class="field-group">
-                <label for="ctrl-grid" class="field-label" data-i18n="ctrl.grid">グリッド表示</label>
-                <select id="ctrl-grid" class="select-control">
-                  <option value="none">OFF</option>
-                  <option value="thirds">3×3</option>
-                  <option value="cross">Cross</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="field-group">
-              <label for="ctrl-timer" class="field-label" data-i18n="ctrl.timer">セルフタイマー</label>
-              <select id="ctrl-timer" class="select-control">
-                <option value="0">OFF</option>
-                <option value="3">3s</option>
-                <option value="5">5s</option>
-                <option value="10">10s</option>
-              </select>
-            </div>
-
-            <label class="toggle-row">
-              <span data-i18n="ctrl.mirror">プレビュー/撮影を左右反転</span>
-              <input id="ctrl-mirror" type="checkbox" />
-            </label>
-
-            <label class="toggle-row">
-              <span data-i18n="ctrl.audioMic">録画時にマイク音声を含める</span>
-              <input id="ctrl-audio" type="checkbox" />
-            </label>
-          </div>
-
-          <div class="control-section">
-            <span class="section-label" data-i18n="ctrl.filterSection">カラーフィルター</span>
-            <div id="ctrl-filter-chips" class="filter-chips"></div>
-          </div>
-
-          <div class="control-section">
-            <span class="section-label" data-i18n="ctrl.wasmSection">WASM 出力設定</span>
-            <div class="control-grid-2">
-              <div class="field-group">
-                <label for="ctrl-photo-format" class="field-label" data-i18n="ctrl.photoFormat">写真出力形式</label>
-                <select id="ctrl-photo-format" class="select-control"></select>
-              </div>
-              <div class="field-group">
-                <label for="ctrl-video-format" class="field-label" data-i18n="ctrl.videoFormat">動画変換形式 (録画後)</label>
-                <select id="ctrl-video-format" class="select-control"></select>
-              </div>
-            </div>
-          </div>
-        </aside>
-      </div>
-
-      <!-- Captured Gallery -->
-      <section class="panel" aria-labelledby="gallery-heading">
+      <!-- Desktop Gallery Section -->
+      <section class="panel gallery-section-desktop" aria-labelledby="gallery-heading">
         <div class="panel-header">
           <div class="panel-title-group">
             <h2 id="gallery-heading" class="panel-title" data-i18n="gallery.title">撮影ギャラリー</h2>
@@ -202,7 +247,7 @@
         <div id="gallery-list" class="gallery-grid">
           <div id="gallery-empty" class="empty-state" style="grid-column: 1 / -1;">
             <p class="empty-state-title" data-i18n="gallery.emptyTitle">まだ撮影されたデータはありません</p>
-            <p class="empty-state-desc" data-i18n="gallery.emptyDesc">上のシャッターボタンで写真撮影または動画録画を行うと、ここに表示されます。</p>
+            <p class="empty-state-desc" data-i18n="gallery.emptyDesc">シャッターボタンで写真撮影または動画録画を行うと、ここに表示されます。</p>
           </div>
         </div>
       </section>
@@ -226,6 +271,111 @@
         </div>
       </div>
     </footer>
+  </div>
+
+  <!-- Quick Adjustments Bottom Sheet -->
+  <div id="quick-sheet-backdrop" class="sheet-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="modal-title" data-i18n="sheet.quickTitle">クイック調整</h3>
+        <button id="btn-close-quick" class="btn btn-ghost btn-sm" type="button" data-i18n="sheet.done">完了</button>
+      </div>
+      <div class="field-group">
+        <span class="field-label" data-i18n="ctrl.filterSection">カラーフィルター</span>
+        <div id="ctrl-filter-chips" class="filter-chips"></div>
+      </div>
+      <div class="sheet-grid-2">
+        <div class="field-group">
+          <label for="ctrl-photo-format" class="field-label" data-i18n="ctrl.photoFormat">写真出力形式</label>
+          <select id="ctrl-photo-format" class="select-control"></select>
+        </div>
+        <div class="field-group">
+          <label for="ctrl-video-format" class="field-label" data-i18n="ctrl.videoFormat">動画変換形式 (録画後)</label>
+          <select id="ctrl-video-format" class="select-control"></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full-Screen Detailed Settings Overlay -->
+  <div id="settings-overlay" class="fullscreen-overlay hidden" role="dialog" aria-modal="true">
+    <div class="fullscreen-header">
+      <h2 class="modal-title" data-i18n="settings.fullTitle">詳細設定</h2>
+      <button id="btn-close-settings" class="btn btn-secondary btn-sm" type="button" data-i18n="settings.close">閉じる</button>
+    </div>
+    <div class="fullscreen-body">
+      <p class="panel-hint" data-i18n="settings.longPressHint">※ 各アイコンボタンは長押しで機能説明を表示できます。</p>
+
+      <div class="settings-group">
+        <span class="settings-group-title" data-i18n="ctrl.cameraSection">カメラデバイス・切り替え</span>
+        <div class="field-group">
+          <label for="ctrl-device" class="field-label" data-i18n="ctrl.deviceLabel">使用カメラ (マルチカメラ対応)</label>
+          <div class="camera-switch-row">
+            <select id="ctrl-device" class="select-control" disabled></select>
+            <button id="btn-refresh-devices" class="btn btn-secondary btn-sm" type="button" data-i18n="ctrl.refreshDevices">再検出</button>
+          </div>
+        </div>
+        <button id="btn-ctrl-flip" class="btn btn-secondary btn-sm" type="button" disabled data-i18n="vf.switchFacing">
+          リア / フロント切替
+        </button>
+        <div class="sheet-grid-2">
+          <div class="field-group">
+            <label for="ctrl-resolution" class="field-label" data-i18n="ctrl.resolution">解像度</label>
+            <select id="ctrl-resolution" class="select-control"></select>
+          </div>
+          <div class="field-group">
+            <label for="ctrl-grid" class="field-label" data-i18n="ctrl.grid">グリッド表示</label>
+            <select id="ctrl-grid" class="select-control">
+              <option value="none">OFF</option>
+              <option value="thirds">3×3</option>
+              <option value="cross">Cross</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-group">
+          <label for="ctrl-timer" class="field-label" data-i18n="ctrl.timer">セルフタイマー</label>
+          <select id="ctrl-timer" class="select-control">
+            <option value="0">OFF</option>
+            <option value="3">3s</option>
+            <option value="5">5s</option>
+            <option value="10">10s</option>
+          </select>
+        </div>
+        <label class="toggle-row">
+          <span data-i18n="ctrl.mirror">プレビュー/撮影を左右反転</span>
+          <input id="ctrl-mirror" type="checkbox" />
+        </label>
+        <label class="toggle-row">
+          <span data-i18n="ctrl.audioMic">録画時にマイク音声を含める</span>
+          <input id="ctrl-audio" type="checkbox" />
+        </label>
+      </div>
+
+      <div class="settings-group">
+        <span class="settings-group-title" data-i18n="ctrl.language">表示言語</span>
+        <select id="ctrl-lang-overlay" class="select-control">
+          <option value="ja">日本語</option>
+          <option value="en">English</option>
+        </select>
+        <a href="licenses.html" class="footer-link" data-i18n="footer.licenses">ライセンス・ご利用上の注意</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full-Screen Gallery Overlay (for Mobile/Tablet Thumbnail Tap) -->
+  <div id="gallery-overlay" class="fullscreen-overlay hidden" role="dialog" aria-modal="true">
+    <div class="fullscreen-header">
+      <h2 class="modal-title" data-i18n="gallery.title">撮影ギャラリー</h2>
+      <div class="header-actions">
+        <button id="btn-overlay-zip" class="btn btn-success btn-sm" type="button" disabled data-i18n="gallery.downloadZip">すべてZIP保存</button>
+        <button id="btn-overlay-clear" class="btn btn-ghost btn-sm" type="button" disabled data-i18n="gallery.clearAll">すべて削除</button>
+        <button id="btn-close-gallery-overlay" class="btn btn-secondary btn-sm" type="button" data-i18n="settings.close">閉じる</button>
+      </div>
+    </div>
+    <div class="fullscreen-body" style="max-width: 1100px;">
+      <div id="gallery-overlay-list" class="gallery-grid"></div>
+    </div>
   </div>
 
   <!-- Preview & WASM Convert Modal -->

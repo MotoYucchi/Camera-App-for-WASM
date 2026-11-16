@@ -1,8 +1,20 @@
 import { FILTER_PRESETS, PHOTO_FORMATS, RESOLUTION_PRESETS, VIDEO_FORMATS } from '../constants/cameraConfig.js';
-import { t } from '../i18n/i18n.js';
+import { i18n, t } from '../i18n/i18n.js';
 import { store } from '../state/store.js';
+import { showToast } from '../utils/toast.js';
 
 export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchFacing, onChangeResolution, onChangeAudio }) {
+  // Full-screen Settings Overlay
+  const btnOpenSettings = document.getElementById('btn-open-settings');
+  const settingsOverlay = document.getElementById('settings-overlay');
+  const btnCloseSettings = document.getElementById('btn-close-settings');
+
+  // Bottom Sheet (Quick Adjustments)
+  const btnOpenQuick = document.getElementById('btn-open-quick');
+  const quickBackdrop = document.getElementById('quick-sheet-backdrop');
+  const btnCloseQuick = document.getElementById('btn-close-quick');
+
+  // Detailed Settings Controls
   const deviceSelect = document.getElementById('ctrl-device');
   const btnRefresh = document.getElementById('btn-refresh-devices');
   const btnFlip = document.getElementById('btn-ctrl-flip');
@@ -11,9 +23,23 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
   const timerSelect = document.getElementById('ctrl-timer');
   const mirrorCheckbox = document.getElementById('ctrl-mirror');
   const audioCheckbox = document.getElementById('ctrl-audio');
+  const langSelectOverlay = document.getElementById('ctrl-lang-overlay');
+
+  // Quick Sheet Controls
   const filterChipsEl = document.getElementById('ctrl-filter-chips');
   const photoFormatSelect = document.getElementById('ctrl-photo-format');
   const videoFormatSelect = document.getElementById('ctrl-video-format');
+
+  // Open/Close Full-screen Settings
+  btnOpenSettings?.addEventListener('click', () => settingsOverlay.classList.remove('hidden'));
+  btnCloseSettings?.addEventListener('click', () => settingsOverlay.classList.add('hidden'));
+
+  // Open/Close Quick Bottom Sheet
+  btnOpenQuick?.addEventListener('click', () => quickBackdrop.classList.remove('hidden'));
+  btnCloseQuick?.addEventListener('click', () => quickBackdrop.classList.add('hidden'));
+  quickBackdrop?.addEventListener('click', (e) => {
+    if (e.target === quickBackdrop) quickBackdrop.classList.add('hidden');
+  });
 
   // Populate static selects
   RESOLUTION_PRESETS.forEach((res) => {
@@ -37,7 +63,6 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
     videoFormatSelect.appendChild(opt);
   });
 
-  // Render filter chips
   FILTER_PRESETS.forEach((f) => {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -50,44 +75,23 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
     filterChipsEl.appendChild(btn);
   });
 
-  // Event listeners
-  deviceSelect.addEventListener('change', (e) => {
-    onSelectDevice(e.target.value);
-  });
-
+  deviceSelect.addEventListener('change', (e) => onSelectDevice(e.target.value));
   btnRefresh.addEventListener('click', onRefreshDevices);
   btnFlip.addEventListener('click', onSwitchFacing);
+  resolutionSelect.addEventListener('change', (e) => onChangeResolution(e.target.value));
+  gridSelect.addEventListener('change', (e) => store.setState({ gridMode: e.target.value }));
+  timerSelect.addEventListener('change', (e) => store.setState({ timerSeconds: Number(e.target.value) || 0 }));
+  mirrorCheckbox.addEventListener('change', (e) => store.setState({ mirror: e.target.checked }));
+  audioCheckbox.addEventListener('change', (e) => onChangeAudio(e.target.checked));
+  photoFormatSelect.addEventListener('change', (e) => store.setState({ photoFormat: e.target.value }));
+  videoFormatSelect.addEventListener('change', (e) => store.setState({ videoFormat: e.target.value }));
 
-  resolutionSelect.addEventListener('change', (e) => {
-    onChangeResolution(e.target.value);
-  });
-
-  gridSelect.addEventListener('change', (e) => {
-    store.setState({ gridMode: e.target.value });
-  });
-
-  timerSelect.addEventListener('change', (e) => {
-    store.setState({ timerSeconds: Number(e.target.value) || 0 });
-  });
-
-  mirrorCheckbox.addEventListener('change', (e) => {
-    store.setState({ mirror: e.target.checked });
-  });
-
-  audioCheckbox.addEventListener('change', (e) => {
-    onChangeAudio(e.target.checked);
-  });
-
-  photoFormatSelect.addEventListener('change', (e) => {
-    store.setState({ photoFormat: e.target.value });
-  });
-
-  videoFormatSelect.addEventListener('change', (e) => {
-    store.setState({ videoFormat: e.target.value });
+  langSelectOverlay?.addEventListener('change', (e) => {
+    i18n.setLang(e.target.value, { persist: true });
+    showToast(t('toast.langChanged'), 'info');
   });
 
   function sync() {
-    // Sync device dropdown
     const currentVal = store.activeDeviceId;
     deviceSelect.innerHTML = '';
     if (store.devices.length === 0) {
@@ -102,9 +106,7 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
         opt.textContent = dev.label;
         deviceSelect.appendChild(opt);
       }
-      if (currentVal) {
-        deviceSelect.value = currentVal;
-      }
+      if (currentVal) deviceSelect.value = currentVal;
     }
 
     const locked = store.isRecording;
@@ -120,6 +122,7 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
     audioCheckbox.checked = store.includeAudio;
     photoFormatSelect.value = store.photoFormat;
     videoFormatSelect.value = store.videoFormat;
+    if (langSelectOverlay) langSelectOverlay.value = i18n.getLang();
 
     filterChipsEl.querySelectorAll('.filter-chip').forEach((chip) => {
       chip.classList.toggle('active', chip.dataset.filterId === store.filterId);
@@ -127,5 +130,6 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
   }
 
   store.subscribe(sync);
+  i18n.subscribe(sync);
   sync();
 }

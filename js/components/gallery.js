@@ -1,25 +1,59 @@
 import { t } from '../i18n/i18n.js';
-import { downloadCapture } from '../services/downloadService.js';
+import { downloadAllAsZip, downloadCapture } from '../services/downloadService.js';
 import { store } from '../state/store.js';
 import { formatBytes } from '../utils/formatters.js';
+import { showToast } from '../utils/toast.js';
 
 export function initGallery({ onOpenPreview }) {
-  const listEl = document.getElementById('gallery-list');
-  const emptyEl = document.getElementById('gallery-empty');
+  const desktopListEl = document.getElementById('gallery-list');
+  const desktopEmptyEl = document.getElementById('gallery-empty');
   const summaryEl = document.getElementById('gallery-summary');
   const btnZip = document.getElementById('btn-download-zip');
   const btnClear = document.getElementById('btn-clear-gallery');
 
-  function render() {
-    const count = store.captures.length;
-    summaryEl.textContent = t('gallery.count', { count });
-    btnZip.disabled = count === 0;
-    btnClear.disabled = count === 0;
+  // Full-screen Gallery Overlay (for mobile/tablet thumb button)
+  const galleryOverlay = document.getElementById('gallery-overlay');
+  const btnCloseGalleryOverlay = document.getElementById('btn-close-gallery-overlay');
+  const overlayListEl = document.getElementById('gallery-overlay-list');
+  const btnOverlayZip = document.getElementById('btn-overlay-zip');
+  const btnOverlayClear = document.getElementById('btn-overlay-clear');
 
-    listEl.innerHTML = '';
-    if (count === 0) {
-      listEl.appendChild(emptyEl);
-      emptyEl.classList.remove('hidden');
+  btnCloseGalleryOverlay?.addEventListener('click', () => {
+    galleryOverlay.classList.add('hidden');
+  });
+
+  async function handleZip() {
+    try {
+      await downloadAllAsZip(store.captures);
+      showToast(t('toast.zipStarted'), 'success');
+    } catch (err) {
+      showToast(t('toast.zipError', { msg: err.message }), 'error');
+    }
+  }
+
+  function handleClear() {
+    store.clearCaptures();
+    showToast(t('toast.galleryCleared'), 'info');
+  }
+
+  btnZip?.addEventListener('click', handleZip);
+  btnOverlayZip?.addEventListener('click', handleZip);
+  btnClear?.addEventListener('click', handleClear);
+  btnOverlayClear?.addEventListener('click', handleClear);
+
+  function buildCardsInto(container, emptyNode) {
+    container.innerHTML = '';
+    if (store.captures.length === 0) {
+      if (emptyNode) {
+        container.appendChild(emptyNode);
+        emptyNode.classList.remove('hidden');
+      } else {
+        const p = document.createElement('p');
+        p.className = 'empty-state';
+        p.style.gridColumn = '1 / -1';
+        p.textContent = t('gallery.emptyTitle');
+        container.appendChild(p);
+      }
       return;
     }
 
@@ -31,7 +65,7 @@ export function initGallery({ onOpenPreview }) {
       thumbWrap.className = 'gallery-thumb-wrap';
       thumbWrap.addEventListener('click', () => onOpenPreview(item.id));
 
-      if (item.type === 'photo') {
+      if (item.type === 'photo' || item.format === 'gif') {
         const img = document.createElement('img');
         img.className = 'gallery-thumb';
         img.src = item.url;
@@ -91,10 +125,28 @@ export function initGallery({ onOpenPreview }) {
       actionsEl.append(btnSave, btnWasm, btnDel);
       body.append(nameEl, metaEl, actionsEl);
       card.append(thumbWrap, body);
-      listEl.appendChild(card);
+      container.appendChild(card);
     }
+  }
+
+  function render() {
+    const count = store.captures.length;
+    summaryEl.textContent = t('gallery.count', { count });
+    btnZip.disabled = count === 0;
+    btnClear.disabled = count === 0;
+    btnOverlayZip.disabled = count === 0;
+    btnOverlayClear.disabled = count === 0;
+
+    buildCardsInto(desktopListEl, desktopEmptyEl);
+    buildCardsInto(overlayListEl, null);
   }
 
   store.subscribe(render);
   render();
+
+  return {
+    openOverlay() {
+      galleryOverlay.classList.remove('hidden');
+    }
+  };
 }

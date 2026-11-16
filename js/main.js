@@ -5,10 +5,10 @@ import { initPreviewModal } from './components/previewModal.js';
 import { initViewfinder } from './components/viewfinder.js';
 import { i18n, t } from './i18n/i18n.js';
 import { cameraService } from './services/cameraService.js';
-import { downloadAllAsZip } from './services/downloadService.js';
 import { wasmService } from './services/wasmService.js';
 import { store } from './state/store.js';
 import { formatTimestampForFilename } from './utils/formatters.js';
+import { initLongPressTooltips } from './utils/longPress.js';
 import { showToast } from './utils/toast.js';
 
 function pickSupportedRecorderMime() {
@@ -29,13 +29,13 @@ function pickSupportedRecorderMime() {
 
 function initApp() {
   i18n.applyToDOM();
+  initLongPressTooltips();
 
   const langSelector = document.getElementById('lang-selector');
   const statusBadge = document.getElementById('wasm-status-badge');
   const statusText = document.getElementById('wasm-status-text');
   const btnPreloadWasm = document.getElementById('btn-preload-wasm');
-  const btnDownloadZip = document.getElementById('btn-download-zip');
-  const btnClearGallery = document.getElementById('btn-clear-gallery');
+  const btnTopWasm = document.getElementById('btn-top-wasm');
 
   let mediaRecorder = null;
   let recordedChunks = [];
@@ -43,9 +43,13 @@ function initApp() {
   let isCountingDown = false;
 
   function syncWasmBadge() {
-    statusBadge.className = `status-badge status-${store.wasmStatus}`;
-    statusText.textContent = store.getWasmStatusText();
-    btnPreloadWasm.disabled = store.wasmStatus === 'loading' || store.wasmStatus === 'ready' || store.wasmStatus === 'busy';
+    if (statusBadge) statusBadge.className = `status-badge status-${store.wasmStatus}`;
+    if (statusText) statusText.textContent = store.getWasmStatusText();
+    const busy = store.wasmStatus === 'loading' || store.wasmStatus === 'ready' || store.wasmStatus === 'busy';
+    if (btnPreloadWasm) btnPreloadWasm.disabled = busy;
+    if (btnTopWasm) {
+      btnTopWasm.classList.toggle('active', store.wasmStatus === 'ready');
+    }
   }
 
   store.subscribe(syncWasmBadge);
@@ -57,14 +61,24 @@ function initApp() {
     showToast(t('toast.langChanged'), 'info');
   });
 
-  btnPreloadWasm?.addEventListener('click', () => {
+  function preloadWasm() {
     wasmService.ensureLoaded((status, key) => store.setWasmStatus(status, key)).catch(() => {});
+  }
+
+  btnPreloadWasm?.addEventListener('click', preloadWasm);
+  btnTopWasm?.addEventListener('click', preloadWasm);
+
+  const previewModal = initPreviewModal();
+  const gallery = initGallery({
+    onOpenPreview: (id) => previewModal.open(id)
   });
 
   const viewfinder = initViewfinder({
     onStartCamera: () => activateCamera({ deviceId: store.activeDeviceId, facingMode: store.facingMode }),
     onSwitchFacing: () => switchFacingMode(),
-    onShutter: () => handleShutter()
+    onSelectDevice: (deviceId) => selectDevice(deviceId),
+    onShutter: () => handleShutter(),
+    onOpenGallery: () => gallery.openOverlay()
   });
 
   async function activateCamera({ deviceId = '', facingMode = store.facingMode, resolutionId = store.resolutionId, includeAudio = store.includeAudio } = {}) {
@@ -157,7 +171,6 @@ function initApp() {
       return;
     }
 
-    // Video mode
     if (!store.isRecording) {
       startRecording();
     } else {
@@ -252,33 +265,10 @@ function initApp() {
     }
   });
 
-  const previewModal = initPreviewModal();
-  initGallery({
-    onOpenPreview: (id) => previewModal.open(id)
-  });
-
-  btnDownloadZip.addEventListener('click', async () => {
-    try {
-      btnDownloadZip.disabled = true;
-      await downloadAllAsZip(store.captures);
-      showToast(t('toast.zipStarted'), 'success');
-    } catch (err) {
-      showToast(t('toast.zipError', { msg: err.message }), 'error');
-    } finally {
-      btnDownloadZip.disabled = store.captures.length === 0;
-    }
-  });
-
-  btnClearGallery.addEventListener('click', () => {
-    store.clearCaptures();
-    showToast(t('toast.galleryCleared'), 'info');
-  });
-
   cameraService.onDeviceChange((devices) => {
     store.setState({ devices });
   });
 
-  // Clean up hardware camera lock on page unload
   window.addEventListener('beforeunload', () => {
     cameraService.stopStream();
   });
