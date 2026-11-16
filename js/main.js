@@ -1,4 +1,4 @@
-import { FILTER_PRESETS, PHOTO_FORMATS, VIDEO_FORMATS } from './constants/cameraConfig.js';
+import { PHOTO_FORMATS, VIDEO_FORMATS } from './constants/cameraConfig.js';
 import { initCameraControls } from './components/cameraControls.js';
 import { initGallery } from './components/gallery.js';
 import { initPreviewModal } from './components/previewModal.js';
@@ -95,6 +95,7 @@ function initApp() {
         cameraState: 'active',
         cameraError: null,
         devices: res.devices,
+        capabilities: res.capabilities || {},
         activeDeviceId: res.activeDeviceId,
         facingMode: res.facingMode,
         mirror: res.facingMode === 'user',
@@ -146,14 +147,18 @@ function initApp() {
         await viewfinder.runCountdown(store.timerSeconds);
         isCountingDown = false;
       }
+
+      if (store.pro.nightSight) {
+        showToast(t('vf.nightCapturing'), 'info', 1200);
+      }
+
       viewfinder.triggerFlash();
 
-      const filter = FILTER_PRESETS.find((f) => f.id === store.filterId);
       const fmt = PHOTO_FORMATS[store.photoFormat] || PHOTO_FORMATS.png;
       const { blob, width, height } = await viewfinder.captureFrameToBlob({
         format: fmt.id,
         mirror: store.mirror,
-        filterCss: filter?.css || 'none'
+        nightSight: store.pro.nightSight
       });
 
       if (blob) {

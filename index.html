@@ -98,6 +98,11 @@
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
               </svg>
             </button>
+            <button id="btn-top-night" class="icon-btn icon-btn-round" type="button" data-tip-key="tip.nightQuick">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            </button>
             <button id="btn-top-timer" class="icon-btn icon-btn-round" type="button" data-tip-key="tip.timer">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="13" r="8" />
@@ -273,32 +278,207 @@
     </footer>
   </div>
 
-  <!-- Quick Adjustments Bottom Sheet -->
-  <div id="quick-sheet-backdrop" class="sheet-backdrop hidden" role="dialog" aria-modal="true">
+  <!-- 1. Bottom-Left: Photo Settings Bottom Sheet (Pixel Camera Style + "..." to Full Settings) -->
+  <div id="settings-sheet-backdrop" class="sheet-backdrop hidden" role="dialog" aria-modal="true">
     <div class="bottom-sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-header">
-        <h3 class="modal-title" data-i18n="sheet.quickTitle">クイック調整</h3>
-        <button id="btn-close-quick" class="btn btn-ghost btn-sm" type="button" data-i18n="sheet.done">完了</button>
+        <h3 class="sheet-title" data-i18n="sheet.settingsTitle">撮影設定</h3>
+        <button id="btn-open-full-settings" class="more-dots-btn" type="button" data-tip-key="tip.moreSettings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="5" cy="12" r="2" />
+            <circle cx="12" cy="12" r="2" />
+            <circle cx="19" cy="12" r="2" />
+          </svg>
+        </button>
       </div>
-      <div class="field-group">
-        <span class="field-label" data-i18n="ctrl.filterSection">カラーフィルター</span>
-        <div id="ctrl-filter-chips" class="filter-chips"></div>
-      </div>
-      <div class="sheet-grid-2">
-        <div class="field-group">
-          <label for="ctrl-photo-format" class="field-label" data-i18n="ctrl.photoFormat">写真出力形式</label>
-          <select id="ctrl-photo-format" class="select-control"></select>
+
+      <div class="setting-row">
+        <div class="setting-row-meta">
+          <span class="setting-row-label" data-i18n="ctrl.timer">タイマー</span>
+          <span id="sheet-timer-val" class="setting-row-val">OFF</span>
         </div>
-        <div class="field-group">
-          <label for="ctrl-video-format" class="field-label" data-i18n="ctrl.videoFormat">動画変換形式 (録画後)</label>
-          <select id="ctrl-video-format" class="select-control"></select>
+        <div class="pill-choices">
+          <button class="pill-choice" type="button" data-setting="timer" data-value="0">OFF</button>
+          <button class="pill-choice" type="button" data-setting="timer" data-value="3">3s</button>
+          <button class="pill-choice" type="button" data-setting="timer" data-value="5">5s</button>
+          <button class="pill-choice" type="button" data-setting="timer" data-value="10">10s</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-row-meta">
+          <span class="setting-row-label" data-i18n="ctrl.grid">グリッド表示</span>
+          <span id="sheet-grid-val" class="setting-row-val">THIRDS</span>
+        </div>
+        <div class="pill-choices">
+          <button class="pill-choice" type="button" data-setting="grid" data-value="none">OFF</button>
+          <button class="pill-choice" type="button" data-setting="grid" data-value="thirds">3×3</button>
+          <button class="pill-choice" type="button" data-setting="grid" data-value="cross">+</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-row-meta">
+          <span class="setting-row-label" data-i18n="ctrl.mirror">左右反転</span>
+          <span id="sheet-mirror-val" class="setting-row-val">OFF</span>
+        </div>
+        <div class="pill-choices">
+          <button class="pill-choice" type="button" data-setting="mirror" data-value="false">OFF</button>
+          <button class="pill-choice" type="button" data-setting="mirror" data-value="true">ON</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-row-meta">
+          <span class="setting-row-label" data-i18n="ctrl.photoFormat">写真形式</span>
+          <span id="sheet-photo-fmt-val" class="setting-row-val">PNG</span>
+        </div>
+        <div class="pill-choices">
+          <button class="pill-choice" type="button" data-setting="photoFormat" data-value="png">PNG</button>
+          <button class="pill-choice" type="button" data-setting="photoFormat" data-value="jpeg">JPG</button>
+          <button class="pill-choice" type="button" data-setting="photoFormat" data-value="webp">WebP</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-row-meta">
+          <span class="setting-row-label" data-i18n="ctrl.videoFormat">動画形式</span>
+          <span id="sheet-video-fmt-val" class="setting-row-val">MP4</span>
+        </div>
+        <div class="pill-choices">
+          <button class="pill-choice" type="button" data-setting="videoFormat" data-value="mp4">MP4</button>
+          <button class="pill-choice" type="button" data-setting="videoFormat" data-value="gif">GIF</button>
+          <button class="pill-choice" type="button" data-setting="videoFormat" data-value="webm">WebM</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-row-meta">
+          <span class="setting-row-label" data-i18n="ctrl.audioMic">マイク音声</span>
+          <span id="sheet-audio-val" class="setting-row-val">OFF</span>
+        </div>
+        <div class="pill-choices">
+          <button class="pill-choice" type="button" data-setting="audio" data-value="false">OFF</button>
+          <button class="pill-choice" type="button" data-setting="audio" data-value="true">ON</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Full-Screen Detailed Settings Overlay -->
+  <!-- 2. Bottom-Right: Quick & Manual Pro Adjustments Bottom Sheet -->
+  <div id="quick-sheet-backdrop" class="sheet-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title" data-i18n="sheet.quickTitle">クイック・マニュアル調整</h3>
+        <div class="top-bar-group">
+          <button id="btn-reset-pro" class="btn btn-ghost btn-xs" type="button" data-i18n="sheet.reset">リセット</button>
+          <button id="btn-close-quick" class="btn btn-secondary btn-xs" type="button" data-i18n="sheet.done">完了</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <span class="pro-section-title" data-i18n="ctrl.filterSection">フィルター</span>
+        <div id="ctrl-filter-chips" class="filter-chips"></div>
+      </div>
+
+      <span class="pro-section-title" data-i18n="pro.softwareSection">映像調整（全端末対応）</span>
+
+      <div class="pro-slider-row">
+        <div class="pro-slider-head">
+          <span class="pro-slider-name" data-i18n="pro.brightness">Brightness (明るさ)</span>
+          <span id="pro-brightness-val" class="pro-slider-val">100%</span>
+        </div>
+        <input id="pro-brightness" class="pro-range" type="range" min="0.5" max="1.8" step="0.05" value="1" />
+      </div>
+
+      <div class="pro-slider-row">
+        <div class="pro-slider-head">
+          <span class="pro-slider-name" data-i18n="pro.shadows">Shadows (暗部・コントラスト)</span>
+          <span id="pro-shadows-val" class="pro-slider-val">0</span>
+        </div>
+        <input id="pro-shadows" class="pro-range" type="range" min="-40" max="60" step="2" value="0" />
+      </div>
+
+      <div class="pro-slider-row">
+        <div class="pro-slider-head">
+          <span class="pro-slider-name" data-i18n="pro.wbShift">White Balance (色味 Cool ↔ Warm)</span>
+          <span id="pro-wb-shift-val" class="pro-slider-val">Neutral</span>
+        </div>
+        <input id="pro-wb-shift" class="pro-range" type="range" min="-50" max="50" step="2" value="0" />
+      </div>
+
+      <label class="pro-slider-row" style="flex-direction: row; align-items: center; justify-content: space-between; cursor: pointer;">
+        <span class="pro-slider-name" data-i18n="pro.nightSight">Night Sight (暗所マルチフレーム合成)</span>
+        <input id="pro-night-sight" type="checkbox" />
+      </label>
+
+      <span class="pro-section-title" data-i18n="pro.hardwareSection">マニュアル制御（WebRTC ハードウェア対応端末向け）</span>
+
+      <div class="pro-slider-row">
+        <div class="pro-slider-head">
+          <span class="pro-slider-name" data-i18n="pro.ev">EV (露出補正)</span>
+          <div class="pro-slider-right">
+            <span id="pro-ev-val" class="pro-slider-val">Auto</span>
+            <button id="pro-ev-auto" class="pro-auto-btn active" type="button" data-i18n="pro.auto">Auto</button>
+            <span id="pro-ev-hw" class="pro-hw-badge hidden" data-i18n="pro.hwUnsupported">端末非対応</span>
+          </div>
+        </div>
+        <input id="pro-ev" class="pro-range" type="range" disabled />
+      </div>
+
+      <div class="pro-slider-row">
+        <div class="pro-slider-head">
+          <span class="pro-slider-name" data-i18n="pro.iso">ISO 感度</span>
+          <div class="pro-slider-right">
+            <span id="pro-iso-val" class="pro-slider-val">Auto</span>
+            <button id="pro-iso-auto" class="pro-auto-btn active" type="button" data-i18n="pro.auto">Auto</button>
+            <span id="pro-iso-hw" class="pro-hw-badge hidden" data-i18n="pro.hwUnsupported">端末非対応</span>
+          </div>
+        </div>
+        <input id="pro-iso" class="pro-range" type="range" disabled />
+      </div>
+
+      <div class="pro-slider-row">
+        <div class="pro-slider-head">
+          <span class="pro-slider-name" data-i18n="pro.shutter">S (シャッター速度)</span>
+          <div class="pro-slider-right">
+            <span id="pro-shutter-val" class="pro-slider-val">Auto</span>
+            <button id="pro-shutter-auto" class="pro-auto-btn active" type="button" data-i18n="pro.auto">Auto</button>
+            <span id="pro-shutter-hw" class="pro-hw-badge hidden" data-i18n="pro.hwUnsupported">端末非対応</span>
+          </div>
+        </div>
+        <input id="pro-shutter" class="pro-range" type="range" disabled />
+      </div>
+
+      <div class="pro-slider-row">
+        <div class="pro-slider-head">
+          <span class="pro-slider-name" data-i18n="pro.focus">MF (マニュアルフォーカス)</span>
+          <div class="pro-slider-right">
+            <span id="pro-focus-val" class="pro-slider-val">Auto</span>
+            <button id="pro-focus-auto" class="pro-auto-btn active" type="button" data-i18n="pro.auto">Auto</button>
+            <span id="pro-focus-hw" class="pro-hw-badge hidden" data-i18n="pro.hwUnsupported">端末非対応</span>
+          </div>
+        </div>
+        <input id="pro-focus" class="pro-range" type="range" disabled />
+      </div>
+
+      <div class="pro-slider-row">
+        <div class="pro-slider-head">
+          <span class="pro-slider-name" data-i18n="pro.colorTemp">WB 色温度 (Kelvin)</span>
+          <div class="pro-slider-right">
+            <span id="pro-color-temp-val" class="pro-slider-val">Auto</span>
+            <button id="pro-wb-auto" class="pro-auto-btn active" type="button" data-i18n="pro.auto">Auto</button>
+            <span id="pro-wb-hw" class="pro-hw-badge hidden" data-i18n="pro.hwUnsupported">端末非対応</span>
+          </div>
+        </div>
+        <input id="pro-color-temp" class="pro-range" type="range" disabled />
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Full-Screen Detailed Settings Overlay (opened via "..." in Photo Settings) -->
   <div id="settings-overlay" class="fullscreen-overlay hidden" role="dialog" aria-modal="true">
     <div class="fullscreen-header">
       <h2 class="modal-title" data-i18n="settings.fullTitle">詳細設定</h2>
@@ -334,7 +514,7 @@
           </div>
         </div>
         <div class="field-group">
-          <label for="ctrl-timer" class="field-label" data-i18n="ctrl.timer">セルフタイマー</label>
+          <label for="ctrl-timer" class="field-label" data-i18n="ctrl.timer">タイマー</label>
           <select id="ctrl-timer" class="select-control">
             <option value="0">OFF</option>
             <option value="3">3s</option>
@@ -343,11 +523,11 @@
           </select>
         </div>
         <label class="toggle-row">
-          <span data-i18n="ctrl.mirror">プレビュー/撮影を左右反転</span>
+          <span data-i18n="ctrl.mirror">左右反転</span>
           <input id="ctrl-mirror" type="checkbox" />
         </label>
         <label class="toggle-row">
-          <span data-i18n="ctrl.audioMic">録画時にマイク音声を含める</span>
+          <span data-i18n="ctrl.audioMic">マイク音声</span>
           <input id="ctrl-audio" type="checkbox" />
         </label>
       </div>
@@ -363,7 +543,7 @@
     </div>
   </div>
 
-  <!-- Full-Screen Gallery Overlay (for Mobile/Tablet Thumbnail Tap) -->
+  <!-- Full-Screen Gallery Overlay -->
   <div id="gallery-overlay" class="fullscreen-overlay hidden" role="dialog" aria-modal="true">
     <div class="fullscreen-header">
       <h2 class="modal-title" data-i18n="gallery.title">撮影ギャラリー</h2>

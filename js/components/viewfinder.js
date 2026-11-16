@@ -2,6 +2,43 @@ import { FILTER_PRESETS } from '../constants/cameraConfig.js';
 import { store } from '../state/store.js';
 import { formatDuration } from '../utils/formatters.js';
 
+export function buildCompositeFilterCss() {
+  const parts = [];
+  const preset = FILTER_PRESETS.find((f) => f.id === store.filterId);
+  if (preset?.css) parts.push(preset.css);
+
+  const p = store.pro;
+  let brightness = p.brightness;
+  let contrast = 1 + (p.shadows * -0.004); // lifting shadows softens harsh contrast slightly
+
+  if (p.nightSight) {
+    brightness *= 1.32;
+    contrast *= 1.08;
+  }
+
+  if (Math.abs(brightness - 1) > 0.01) {
+    parts.push(`brightness(${brightness.toFixed(2)})`);
+  }
+  if (Math.abs(contrast - 1) > 0.01) {
+    parts.push(`contrast(${contrast.toFixed(2)})`);
+  }
+  if (p.shadows > 0) {
+    // Subtle saturation compensation when lifting shadows
+    parts.push(`saturate(${(1 + p.shadows * 0.003).toFixed(2)})`);
+  }
+  if (p.wbShift > 0) {
+    // Warm shift
+    const amt = (p.wbShift / 100).toFixed(2);
+    parts.push(`sepia(${amt}) saturate(${(1 + p.wbShift * 0.004).toFixed(2)})`);
+  } else if (p.wbShift < 0) {
+    // Cool shift
+    const deg = Math.round(p.wbShift * 0.35);
+    parts.push(`hue-rotate(${deg}deg) saturate(${(1 + Math.abs(p.wbShift) * 0.003).toFixed(2)})`);
+  }
+
+  return parts.length > 0 ? parts.join(' ') : 'none';
+}
+
 export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, onShutter, onOpenGallery }) {
   const videoEl = document.getElementById('vf-video');
   const gridEl = document.getElementById('vf-grid');
@@ -20,6 +57,7 @@ export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, 
   const btnTopTimer = document.getElementById('btn-top-timer');
   const btnTopGrid = document.getElementById('btn-top-grid');
   const btnTopMirror = document.getElementById('btn-top-mirror');
+  const btnTopNight = document.getElementById('btn-top-night');
 
   const btnGalleryThumb = document.getElementById('btn-gallery-thumb');
   const btnSwitchFacing = document.getElementById('btn-switch-facing');
@@ -39,7 +77,6 @@ export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, 
   });
   btnShutter?.addEventListener('click', onShutter);
 
-  // Quick cycle icon buttons in top bar
   btnTopTimer?.addEventListener('click', () => {
     const cycle = [0, 3, 5, 10];
     const next = cycle[(cycle.indexOf(store.timerSeconds) + 1) % cycle.length];
@@ -54,6 +91,10 @@ export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, 
 
   btnTopMirror?.addEventListener('click', () => {
     store.setState({ mirror: !store.mirror });
+  });
+
+  btnTopNight?.addEventListener('click', () => {
+    store.setPro({ nightSight: !store.pro.nightSight });
   });
 
   function renderLensBar() {
@@ -71,7 +112,6 @@ export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, 
       if (dev.deviceId === store.activeDeviceId) {
         btn.classList.add('active');
       }
-      // Short compact label for multi-camera pill
       const lower = dev.label.toLowerCase();
       let shortLabel = `${idx + 1}`;
       if (lower.includes('ultra') || lower.includes('0.5')) shortLabel = '.5';
@@ -122,22 +162,18 @@ export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, 
       placeholderDescEl.textContent = store.cameraError;
     }
 
-    // Mirror & Filter
     videoEl.classList.toggle('mirrored', Boolean(store.mirror));
-    const filter = FILTER_PRESETS.find((f) => f.id === store.filterId);
-    videoEl.style.filter = filter ? filter.css : 'none';
+    videoEl.style.filter = buildCompositeFilterCss();
 
-    // Grid overlay
     gridEl.className = 'grid-overlay';
     if (store.gridMode === 'thirds') gridEl.classList.add('grid-thirds');
     if (store.gridMode === 'cross') gridEl.classList.add('grid-cross');
 
-    // Top bar icon active states
     btnTopTimer?.classList.toggle('active', store.timerSeconds > 0);
     btnTopGrid?.classList.toggle('active', store.gridMode !== 'none');
     btnTopMirror?.classList.toggle('active', store.mirror);
+    btnTopNight?.classList.toggle('active', store.pro.nightSight);
 
-    // Resolution HUD
     if (active && store.actualResolution) {
       resBadgeEl.textContent = store.actualResolution;
       resBadgeEl.classList.remove('hidden');
@@ -145,11 +181,9 @@ export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, 
       resBadgeEl.classList.add('hidden');
     }
 
-    // Recording HUD
     recBadgeEl.classList.toggle('hidden', !store.isRecording);
     recTimeEl.textContent = formatDuration(store.recordingSeconds);
 
-    // Mode tabs & Shutter button
     btnModePhoto.classList.toggle('active', store.mode === 'photo');
     btnModeVideo.classList.toggle('active', store.mode === 'video');
     btnModePhoto.disabled = store.isRecording;
@@ -158,7 +192,6 @@ export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, 
     btnShutter.disabled = !active;
     btnShutter.classList.toggle('video-mode', store.mode === 'video');
     btnShutter.classList.toggle('recording', store.isRecording);
-
     btnSwitchFacing.disabled = !active || store.isRecording;
 
     renderLensBar();
@@ -190,22 +223,51 @@ export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, 
       }
       countdownEl.classList.add('hidden');
     },
-    captureFrameToBlob({ format = 'png', mirror = false, filterCss = 'none' } = {}) {
+    async captureFrameToBlob({ format = 'png', mirror = false, nightSight = false } = {}) {
       const w = videoEl.videoWidth || 1280;
       const h = videoEl.videoHeight || 720;
       const canvas = document.createElement('canvas');
       canvas.width = w;
       canvas.height = h;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d', { willReadFrequently: nightSight });
+      const filterCss = buildCompositeFilterCss();
 
-      if (filterCss && filterCss !== 'none') {
-        ctx.filter = filterCss;
+      const drawOnce = () => {
+        ctx.save();
+        ctx.clearRect(0, 0, w, h);
+        if (filterCss && filterCss !== 'none') {
+          ctx.filter = filterCss;
+        }
+        if (mirror) {
+          ctx.translate(w, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(videoEl, 0, 0, w, h);
+        ctx.restore();
+      };
+
+      if (nightSight) {
+        // Multi-frame burst averaging (4 frames) for low-light noise reduction
+        const frames = 4;
+        const accum = new Uint32Array(w * h * 4);
+        for (let f = 0; f < frames; f++) {
+          drawOnce();
+          const imgData = ctx.getImageData(0, 0, w, h).data;
+          for (let i = 0; i < imgData.length; i++) {
+            accum[i] += imgData[i];
+          }
+          if (f < frames - 1) {
+            await new Promise((r) => setTimeout(r, 55));
+          }
+        }
+        const out = ctx.createImageData(w, h);
+        for (let i = 0; i < accum.length; i++) {
+          out.data[i] = Math.min(255, Math.round(accum[i] / frames));
+        }
+        ctx.putImageData(out, 0, 0);
+      } else {
+        drawOnce();
       }
-      if (mirror) {
-        ctx.translate(w, 0);
-        ctx.scale(-1, 1);
-      }
-      ctx.drawImage(videoEl, 0, 0, w, h);
 
       const mime = format === 'jpeg' ? 'image/jpeg' : format === 'webp' ? 'image/webp' : 'image/png';
       return new Promise((resolve) => {

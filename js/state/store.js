@@ -1,3 +1,4 @@
+import { createDefaultProSettings } from '../constants/cameraConfig.js';
 import { t } from '../i18n/i18n.js';
 
 let nextCaptureId = 1;
@@ -17,6 +18,9 @@ class CameraStore {
     this.photoFormat = 'png';
     this.videoFormat = 'mp4';
 
+    this.capabilities = {};
+    this.pro = createDefaultProSettings();
+
     this.cameraState = 'idle'; // 'idle' | 'starting' | 'active' | 'error'
     this.cameraError = null;
     this.actualResolution = '';
@@ -26,7 +30,7 @@ class CameraStore {
     this.wasmStatus = 'idle'; // 'idle' | 'loading' | 'ready' | 'busy' | 'error'
     this.wasmStatusKey = 'wasm.idle';
 
-    this.captures = []; // { id, type: 'photo'|'video', blob, url, name, format, size, createdAt, width, height, converting }
+    this.captures = [];
     this.listeners = new Set();
   }
 
@@ -43,6 +47,16 @@ class CameraStore {
 
   setState(patch) {
     Object.assign(this, patch);
+    this.notify();
+  }
+
+  setPro(patch) {
+    this.pro = { ...this.pro, ...patch };
+    this.notify();
+  }
+
+  resetPro() {
+    this.pro = createDefaultProSettings();
     this.notify();
   }
 

@@ -96,12 +96,12 @@
   gap: 5px;
 }
 
-/* Bottom Sheet (Quick Adjustments) */
+/* Bottom Sheets */
 .sheet-backdrop {
   position: fixed;
   inset: 0;
   z-index: 70;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.52);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -109,11 +109,13 @@
 
 .bottom-sheet {
   width: 100%;
-  max-width: 600px;
-  background: var(--bg-surface);
+  max-width: 620px;
+  max-height: 78vh;
+  overflow-y: auto;
+  background: #14161b;
   border-top: 1px solid var(--border-default);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  padding: 14px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  border-radius: 22px 22px 0 0;
+  padding: 12px 18px calc(18px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -126,12 +128,173 @@
   border-radius: var(--radius-full);
   background: var(--border-strong);
   margin: 0 auto 2px;
+  flex-shrink: 0;
 }
 
 .sheet-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+}
+
+.sheet-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.more-dots-btn {
+  width: 48px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface-elevated);
+  color: var(--text-primary);
+  display: grid;
+  place-items: center;
+}
+
+.more-dots-btn:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-surface-hover);
+}
+
+/* Pixel-style Photo Settings Rows */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.setting-row-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.setting-row-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.setting-row-val {
+  font-size: 12px;
+  color: var(--accent-primary);
+  font-weight: 500;
+}
+
+.pill-choices {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pill-choice {
+  min-width: 40px;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: #222630;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--ease-fast);
+}
+
+.pill-choice.active {
+  background: #f5c97a;
+  color: #111317;
+  border-color: #f5c97a;
+}
+
+/* Pro / Manual Sliders Sheet */
+.pro-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.pro-slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #1b1e26;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.pro-slider-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pro-slider-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pro-slider-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pro-slider-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-primary);
+}
+
+.pro-auto-btn {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.pro-auto-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary-text);
+}
+
+.pro-hw-badge {
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.pro-range {
+  width: 100%;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+
+.pro-range:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .sheet-grid-2 {

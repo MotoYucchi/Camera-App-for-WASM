@@ -61,7 +61,6 @@ class CameraService {
       throw new Error(t('err.notFound'));
     }
 
-    // Always release previous camera stream before requesting a new one
     this.stopStream();
 
     const videoConstraints = this.buildVideoConstraints({ deviceId, facingMode, resolutionId });
@@ -73,7 +72,6 @@ class CameraService {
         audio: includeAudio
       });
     } catch (err) {
-      // Retry with relaxed constraints if OverconstrainedError or resolution fails
       if (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
         const fallbackVideo = deviceId
           ? { deviceId: { exact: deviceId } }
@@ -90,17 +88,32 @@ class CameraService {
     this.stream = stream;
     const videoTrack = stream.getVideoTracks()[0];
     const settings = videoTrack?.getSettings?.() || {};
+    const capabilities = videoTrack?.getCapabilities?.() || {};
     const devices = await this.enumerateVideoDevices();
 
     return {
       stream,
       devices,
+      capabilities,
+      settings,
       activeDeviceId: settings.deviceId || deviceId || '',
       facingMode: settings.facingMode || facingMode,
       width: settings.width || 0,
       height: settings.height || 0,
       label: videoTrack?.label || ''
     };
+  }
+
+  async applyAdvancedConstraint(constraintObj) {
+    const videoTrack = this.stream?.getVideoTracks?.()[0];
+    if (!videoTrack || !videoTrack.applyConstraints) return false;
+    try {
+      await videoTrack.applyConstraints({ advanced: [constraintObj] });
+      return true;
+    } catch (err) {
+      console.warn('Constraint not applied:', constraintObj, err);
+      return false;
+    }
   }
 
   formatCameraError(err) {

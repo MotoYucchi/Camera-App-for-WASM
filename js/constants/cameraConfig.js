@@ -7,7 +7,7 @@ export const RESOLUTION_PRESETS = [
 ];
 
 export const FILTER_PRESETS = [
-  { id: 'none', label: 'Normal', css: 'none' },
+  { id: 'none', label: 'Normal', css: '' },
   { id: 'vivid', label: 'Vivid', css: 'contrast(1.16) saturate(1.32)' },
   { id: 'mono', label: 'Mono', css: 'grayscale(1) contrast(1.12)' },
   { id: 'warm', label: 'Warm', css: 'sepia(0.28) saturate(1.22) brightness(1.03)' },
@@ -16,13 +16,33 @@ export const FILTER_PRESETS = [
 ];
 
 export const PHOTO_FORMATS = {
-  png: { id: 'png', label: 'PNG (Lossless)', ext: 'png', mime: 'image/png' },
-  jpeg: { id: 'jpeg', label: 'JPEG (92%)', ext: 'jpg', mime: 'image/jpeg' },
-  webp: { id: 'webp', label: 'WebP (92%)', ext: 'webp', mime: 'image/webp' }
+  png: { id: 'png', label: 'PNG', ext: 'png', mime: 'image/png' },
+  jpeg: { id: 'jpeg', label: 'JPEG', ext: 'jpg', mime: 'image/jpeg' },
+  webp: { id: 'webp', label: 'WebP', ext: 'webp', mime: 'image/webp' }
 };
 
 export const VIDEO_FORMATS = {
-  mp4: { id: 'mp4', label: 'MP4 (H.264 / WASM)', ext: 'mp4', mime: 'video/mp4', useWasm: true },
-  gif: { id: 'gif', label: 'GIF (Animated / WASM)', ext: 'gif', mime: 'image/gif', useWasm: true },
-  webm: { id: 'webm', label: 'WebM (Raw Recording)', ext: 'webm', mime: 'video/webm', useWasm: false }
+  mp4: { id: 'mp4', label: 'MP4 (WASM)', ext: 'mp4', mime: 'video/mp4', useWasm: true },
+  gif: { id: 'gif', label: 'GIF (WASM)', ext: 'gif', mime: 'image/gif', useWasm: true },
+  webm: { id: 'webm', label: 'WebM', ext: 'webm', mime: 'video/webm', useWasm: false }
 };
+
+export function createDefaultProSettings() {
+  return {
+    brightness: 1.0,      // 0.5 .. 1.8 (software)
+    shadows: 0,           // -40 .. +60 (software contrast/gamma lift)
+    wbShift: 0,           // -50 (Cool) .. +50 (Warm) (software WB fallback)
+    nightSight: false,    // multi-frame stack + low-light boost
+
+    ev: 0,                // hardware exposureCompensation
+    evAuto: true,
+    iso: 0,               // hardware iso
+    isoAuto: true,
+    shutter: 0,           // hardware exposureTime
+    shutterAuto: true,
+    focus: 0,             // hardware focusDistance (MF)
+    focusAuto: true,
+    colorTemp: 5000,      // hardware colorTemperature (WB)
+    wbAuto: true
+  };
+}
