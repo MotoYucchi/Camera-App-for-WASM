@@ -162,6 +162,16 @@
             <div class="pro-dial-header">
               <span id="pro-dial-readout" class="pro-dial-readout">WB : AWB</span>
               <button id="btn-pro-dial-auto" class="pro-auto-btn active" type="button">Auto</button>
+              <button id="btn-pro-dial-sheet" class="icon-btn icon-btn-round" type="button" style="width: 28px; height: 28px;" data-tip-key="tip.quickSheetList">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;">
+                  <line x1="8" y1="6" x2="21" y2="6" />
+                  <line x1="8" y1="12" x2="21" y2="12" />
+                  <line x1="8" y1="18" x2="21" y2="18" />
+                  <line x1="3" y1="6" x2="3.01" y2="6" />
+                  <line x1="3" y1="12" x2="3.01" y2="12" />
+                  <line x1="3" y1="18" x2="3.01" y2="18" />
+                </svg>
+              </button>
               <button id="btn-close-pro-dial" class="pro-close-pill" type="button">Pro &times;</button>
             </div>
             <div class="pro-dial-arc-wrap">
@@ -383,6 +393,9 @@
             <span id="sheet-photo-res-val" class="setting-row-val">FHD</span>
           </div>
           <div class="pill-choices">
+            <button class="pill-choice" type="button" data-setting="resolution" data-value="auto">Auto</button>
+            <button class="pill-choice" type="button" data-setting="resolution" data-value="480p">SD</button>
+            <button class="pill-choice" type="button" data-setting="resolution" data-value="720p">HD</button>
             <button class="pill-choice" type="button" data-setting="resolution" data-value="1080p">FHD</button>
             <button class="pill-choice" type="button" data-setting="resolution" data-value="2160p">4K</button>
             <button class="pill-choice" type="button" data-setting="resolution" data-value="manual" title="Custom / Manual">
@@ -403,6 +416,8 @@
             <span id="sheet-video-res-val" class="setting-row-val">1080p (Full HD)</span>
           </div>
           <div class="pill-choices">
+            <button class="pill-choice" type="button" data-setting="resolution" data-value="auto">Auto</button>
+            <button class="pill-choice" type="button" data-setting="resolution" data-value="480p">SD</button>
             <button class="pill-choice" type="button" data-setting="resolution" data-value="720p">HD</button>
             <button class="pill-choice" type="button" data-setting="resolution" data-value="1080p">FHD</button>
             <button class="pill-choice" type="button" data-setting="resolution" data-value="2160p">4K</button>
@@ -448,6 +463,17 @@
             <button class="pill-choice" type="button" data-setting="audio" data-value="false">OFF</button>
             <button class="pill-choice" type="button" data-setting="audio" data-value="true">ON</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Inline Custom Resolution Input (shown when Manual/Custom is selected) -->
+      <div id="sheet-custom-res-box" class="field-group hidden" style="padding-top: 8px; border-top: 1px solid var(--border-subtle);">
+        <span class="field-label" data-i18n="ctrl.customRes">カスタム解像度 (px)</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input id="sheet-custom-width" type="number" min="160" max="7680" step="2" class="input-control mono" value="1920" placeholder="Width" />
+          <span>×</span>
+          <input id="sheet-custom-height" type="number" min="120" max="4320" step="2" class="input-control mono" value="1080" placeholder="Height" />
+          <button id="btn-sheet-apply-custom-res" class="btn btn-primary btn-sm" type="button" data-i18n="ctrl.applyRes">適用</button>
         </div>
       </div>
     </div>

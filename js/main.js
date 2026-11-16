@@ -76,7 +76,7 @@ function initApp() {
   });
 
   const viewfinder = initViewfinder({
-    onStartCamera: () => activateCamera({ deviceId: store.activeDeviceId, facingMode: store.facingMode }),
+    onStartCamera: () => activateCamera({ deviceId: store.activeDeviceId, facingMode: store.facingMode, autoMirror: store.cameraState === 'idle' }),
     onSwitchFacing: () => switchFacingMode(),
     onSelectDevice: (deviceId) => selectDevice(deviceId),
     onShutter: () => handleShutter(),
@@ -90,7 +90,8 @@ function initApp() {
     customWidth = store.customWidth,
     customHeight = store.customHeight,
     fps = store.fps,
-    includeAudio = store.includeAudio
+    includeAudio = store.includeAudio,
+    autoMirror = false
   } = {}) {
     store.setState({ cameraState: 'starting', cameraError: null });
     try {
@@ -104,16 +105,19 @@ function initApp() {
         includeAudio
       });
       viewfinder.setStream(res.stream);
-      store.setState({
+      const nextState = {
         cameraState: 'active',
         cameraError: null,
         devices: res.devices,
         capabilities: res.capabilities || {},
         activeDeviceId: res.activeDeviceId,
         facingMode: res.facingMode,
-        mirror: res.facingMode === 'user',
         actualResolution: res.width && res.height ? `${res.width}×${res.height}` : ''
-      });
+      };
+      if (autoMirror) {
+        nextState.mirror = res.facingMode === 'user';
+      }
+      store.setState(nextState);
       return res;
     } catch (err) {
       viewfinder.setStream(null);
@@ -131,7 +135,8 @@ function initApp() {
     const nextFacing = store.facingMode === 'user' ? 'environment' : 'user';
     const res = await activateCamera({
       deviceId: '',
-      facingMode: nextFacing
+      facingMode: nextFacing,
+      autoMirror: true
     });
     if (res?.label) {
       showToast(t('toast.cameraSwitched', { label: res.label }), 'info');
@@ -198,6 +203,10 @@ function initApp() {
 
   function startRecording() {
     if (!cameraService.stream) return;
+    if (!window.MediaRecorder) {
+      showToast(t('err.generic', { msg: 'MediaRecorder is not supported in this browser.' }), 'error');
+      return;
+    }
     const mimeType = pickSupportedRecorderMime();
     recordedChunks = [];
 

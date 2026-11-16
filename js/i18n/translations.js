@@ -113,6 +113,7 @@ export const TRANSLATIONS = {
     'tip.settings': '撮影設定: タイマー・形式・フィルターのボトムシートを開きます',
     'tip.moreSettings': '詳細設定: カメラデバイスや解像度などの全画面設定を開きます',
     'tip.quickSheet': 'クイック・マニュアル調整: Brightness/Shadows/WB/Night Sight や ISO/S/MF/EV を調整します',
+    'tip.quickSheetList': '一覧表示: フィルターや各スライダーをボトムシート一覧で開きます',
     'tip.gallery': 'ギャラリー: 撮影した写真や動画の一覧・WASM変換を開きます',
     'tip.flip': 'カメラ切替: リアカメラとフロントカメラを切り替えます',
     'tip.shutter': 'シャッター: 写真撮影、または動画録画の開始/停止を行います',
@@ -121,6 +122,7 @@ export const TRANSLATIONS = {
 
     'toast.langChanged': '言語を日本語に切り替えました',
     'toast.cameraSwitched': 'カメラを切り替えました: {label}',
+    'toast.resApplied': '解像度を設定しました: {res}',
     'toast.photoCaptured': '写真を撮影しました ({format})',
     'toast.videoRecorded': '動画を録画しました',
     'toast.wasmConverted': 'WASM 変換が完了しました ({format})',
@@ -241,6 +243,7 @@ export const TRANSLATIONS = {
     'tip.settings': 'Photo Settings: Opens timer, format & filter bottom sheet',
     'tip.moreSettings': 'More Settings: Opens full-screen camera & device settings',
     'tip.quickSheet': 'Quick & Manual: Adjust Brightness, Shadows, WB, Night Sight, ISO, S, MF & EV',
+    'tip.quickSheetList': 'List View: Open filters & all sliders in a bottom sheet',
     'tip.gallery': 'Gallery: Opens captured photos & videos',
     'tip.flip': 'Switch Camera: Flips between Rear and Front cameras',
     'tip.shutter': 'Shutter: Captures a photo or starts/stops video recording',
@@ -249,6 +252,7 @@ export const TRANSLATIONS = {
 
     'toast.langChanged': 'Language switched to English',
     'toast.cameraSwitched': 'Switched camera: {label}',
+    'toast.resApplied': 'Resolution set: {res}',
     'toast.photoCaptured': 'Photo captured ({format})',
     'toast.videoRecorded': 'Video recorded',
     'toast.wasmConverted': 'WASM conversion completed ({format})',

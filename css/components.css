@@ -223,6 +223,27 @@
   gap: 8px;
 }
 
+@media (max-width: 430px) {
+  .camera-top-bar {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .camera-top-bar .top-bar-group {
+    gap: 5px;
+  }
+
+  .camera-top-bar .icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .camera-top-bar .icon-btn svg {
+    width: 17px;
+    height: 17px;
+  }
+}
+
 .vf-pill {
   display: inline-flex;
   align-items: center;

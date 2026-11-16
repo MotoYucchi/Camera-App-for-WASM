@@ -32,6 +32,10 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
   const sheetFpsVal = document.getElementById('sheet-fps-val');
   const sheetVideoFmtVal = document.getElementById('sheet-video-fmt-val');
   const sheetAudioVal = document.getElementById('sheet-audio-val');
+  const sheetCustomResBox = document.getElementById('sheet-custom-res-box');
+  const sheetCustomWidthInput = document.getElementById('sheet-custom-width');
+  const sheetCustomHeightInput = document.getElementById('sheet-custom-height');
+  const btnSheetApplyCustomRes = document.getElementById('btn-sheet-apply-custom-res');
 
   // Full-Screen Settings Controls
   const deviceSelect = document.getElementById('ctrl-device');
@@ -86,7 +90,11 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
   const proWbHwBadge = document.getElementById('pro-wb-hw');
 
   // Sheet & Overlay Open/Close
-  btnOpenSettings?.addEventListener('click', () => settingsSheetBackdrop.classList.remove('hidden'));
+  btnOpenSettings?.addEventListener('click', () => {
+    document.getElementById('pro-dial-overlay')?.classList.add('hidden');
+    document.getElementById('btn-open-quick')?.classList.remove('active');
+    settingsSheetBackdrop.classList.remove('hidden');
+  });
   settingsSheetBackdrop?.addEventListener('click', (e) => {
     if (e.target === settingsSheetBackdrop) settingsSheetBackdrop.classList.add('hidden');
   });
@@ -102,10 +110,27 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
     if (e.target === quickBackdrop) quickBackdrop.classList.add('hidden');
   });
 
+  function applyResolutionChoice(value) {
+    onChangeResolution(value);
+    if (value !== 'manual') {
+      const preset = RESOLUTION_PRESETS.find((r) => r.id === value);
+      showToast(t('toast.resApplied', { res: preset?.label || value }), 'info', 1600);
+    }
+  }
+
+  function applyCustomInputs(wEl, hEl) {
+    const rawW = Math.min(7680, Math.max(160, Number(wEl?.value) || 1920));
+    const rawH = Math.min(4320, Math.max(120, Number(hEl?.value) || 1080));
+    const w = Math.round(rawW / 2) * 2;
+    const h = Math.round(rawH / 2) * 2;
+    onApplyCustomResolution(w, h);
+    showToast(t('toast.resApplied', { res: `${w}×${h}` }), 'info', 1800);
+  }
+
   // Pill Choice Delegated Handlers in Settings Sheet
   settingsSheetBackdrop?.addEventListener('click', (e) => {
     const btn = e.target.closest('.pill-choice');
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
     const { setting, value } = btn.dataset;
     if (setting === 'timer') store.setState({ timerSeconds: Number(value) });
     if (setting === 'grid') store.setState({ gridMode: value });
@@ -113,8 +138,12 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
     if (setting === 'photoFormat') store.setState({ photoFormat: value });
     if (setting === 'videoFormat') store.setState({ videoFormat: value });
     if (setting === 'audio') onChangeAudio(value === 'true');
-    if (setting === 'resolution') onChangeResolution(value);
+    if (setting === 'resolution') applyResolutionChoice(value);
     if (setting === 'fps') onChangeFps(Number(value));
+  });
+
+  btnSheetApplyCustomRes?.addEventListener('click', () => {
+    applyCustomInputs(sheetCustomWidthInput, sheetCustomHeightInput);
   });
 
   // Populate static selects in Full-Screen Settings
@@ -140,12 +169,10 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
   deviceSelect.addEventListener('change', (e) => onSelectDevice(e.target.value));
   btnRefresh.addEventListener('click', onRefreshDevices);
   btnFlip.addEventListener('click', onSwitchFacing);
-  resolutionSelect.addEventListener('change', (e) => onChangeResolution(e.target.value));
+  resolutionSelect.addEventListener('change', (e) => applyResolutionChoice(e.target.value));
   fpsSelect?.addEventListener('change', (e) => onChangeFps(Number(e.target.value)));
   btnApplyCustomRes?.addEventListener('click', () => {
-    const w = Math.max(160, Number(customWidthInput?.value) || 1920);
-    const h = Math.max(120, Number(customHeightInput?.value) || 1080);
-    onApplyCustomResolution(w, h);
+    applyCustomInputs(customWidthInput, customHeightInput);
   });
   gridSelect.addEventListener('change', (e) => store.setState({ gridMode: e.target.value }));
   timerSelect.addEventListener('change', (e) => store.setState({ timerSeconds: Number(e.target.value) || 0 }));
@@ -252,9 +279,12 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
     sheetPhotoRows?.classList.toggle('hidden', isVideo);
     sheetVideoRows?.classList.toggle('hidden', !isVideo);
 
-    const resLabel = store.resolutionId === 'manual'
+    const presetLabel = store.resolutionId === 'manual'
       ? `Manual (${store.customWidth}×${store.customHeight})`
       : (RESOLUTION_PRESETS.find((r) => r.id === store.resolutionId)?.label || store.resolutionId);
+    const resLabel = store.cameraState === 'active' && store.actualResolution
+      ? `${presetLabel} [${store.actualResolution}]`
+      : presetLabel;
 
     if (sheetTimerVal) sheetTimerVal.textContent = store.timerSeconds === 0 ? 'OFF' : `${store.timerSeconds}s`;
     if (sheetGridVal) sheetGridVal.textContent = store.gridMode.toUpperCase();
@@ -266,6 +296,7 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
     if (sheetVideoFmtVal) sheetVideoFmtVal.textContent = (VIDEO_FORMATS[store.videoFormat]?.label || store.videoFormat).toUpperCase();
     if (sheetAudioVal) sheetAudioVal.textContent = store.includeAudio ? 'ON' : 'OFF';
 
+    const locked = store.isRecording;
     settingsSheetBackdrop?.querySelectorAll('.pill-choice').forEach((btn) => {
       const { setting, value } = btn.dataset;
       let active = false;
@@ -278,7 +309,20 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
       if (setting === 'resolution') active = store.resolutionId === value;
       if (setting === 'fps') active = String(store.fps) === value;
       btn.classList.toggle('active', active);
+      if (setting === 'resolution' || setting === 'fps' || setting === 'audio') {
+        btn.disabled = locked;
+      }
     });
+
+    if (sheetCustomResBox) {
+      sheetCustomResBox.classList.toggle('hidden', store.resolutionId !== 'manual');
+    }
+    if (sheetCustomWidthInput && document.activeElement !== sheetCustomWidthInput) {
+      sheetCustomWidthInput.value = store.customWidth;
+    }
+    if (sheetCustomHeightInput && document.activeElement !== sheetCustomHeightInput) {
+      sheetCustomHeightInput.value = store.customHeight;
+    }
 
     // Device Dropdown
     const currentVal = store.activeDeviceId;
@@ -298,7 +342,6 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
       if (currentVal) deviceSelect.value = currentVal;
     }
 
-    const locked = store.isRecording;
     deviceSelect.disabled = locked || store.devices.length === 0;
     resolutionSelect.disabled = locked;
     if (fpsSelect) {

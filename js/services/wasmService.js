@@ -121,6 +121,7 @@ class WasmService {
         if (fmt.id === 'mp4') {
           args = [
             '-i', inputName,
+            '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
             '-c:v', 'libx264',
             '-preset', 'ultrafast',
             '-pix_fmt', 'yuv420p',

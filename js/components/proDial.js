@@ -21,6 +21,7 @@ export function initProDial() {
   const btnCloseDial = document.getElementById('btn-close-pro-dial');
   const btnReset = document.getElementById('btn-pro-dial-reset');
   const btnAuto = document.getElementById('btn-pro-dial-auto');
+  const btnOpenSheet = document.getElementById('btn-pro-dial-sheet');
   const readOutEl = document.getElementById('pro-dial-readout');
   const svgEl = document.getElementById('pro-dial-svg');
   const ticksGroup = document.getElementById('pro-dial-ticks');
@@ -28,6 +29,23 @@ export function initProDial() {
 
   let activeParamId = 'wb';
   let isOpen = false;
+  let hwPending = false;
+  let hwQueued = null;
+
+  function applyHardwareThrottled(constraintObj) {
+    hwQueued = constraintObj;
+    if (hwPending) return;
+    hwPending = true;
+    const flush = async () => {
+      while (hwQueued) {
+        const next = hwQueued;
+        hwQueued = null;
+        await cameraService.applyAdvancedConstraint(next);
+      }
+      hwPending = false;
+    };
+    flush();
+  }
 
   function toggleOpen(force) {
     isOpen = typeof force === 'boolean' ? force : !isOpen;
@@ -38,6 +56,10 @@ export function initProDial() {
 
   btnOpenQuick?.addEventListener('click', () => toggleOpen());
   btnCloseDial?.addEventListener('click', () => toggleOpen(false));
+  btnOpenSheet?.addEventListener('click', () => {
+    toggleOpen(false);
+    document.getElementById('quick-sheet-backdrop')?.classList.remove('hidden');
+  });
 
   btnReset?.addEventListener('click', async () => {
     store.resetPro();
@@ -59,8 +81,12 @@ export function initProDial() {
       store.setPro({ isoAuto: true });
       await cameraService.applyAdvancedConstraint({ exposureMode: 'continuous' });
     } else if (activeParamId === 'ev') {
-      store.setPro({ evAuto: true, ev: 0, brightness: 1.0 });
-      if (caps.exposureCompensation) await cameraService.applyAdvancedConstraint({ exposureCompensation: 0 });
+      if (caps.exposureCompensation) {
+        store.setPro({ evAuto: true, ev: 0 });
+        await cameraService.applyAdvancedConstraint({ exposureCompensation: 0 });
+      } else {
+        store.setPro({ evAuto: true, ev: 0, brightness: 1.0 });
+      }
     } else if (activeParamId === 'mf') {
       store.setPro({ focusAuto: true });
       await cameraService.applyAdvancedConstraint({ focusMode: 'continuous' });
@@ -219,7 +245,7 @@ export function initProDial() {
     }
   }
 
-  async function applyNormValue(id, normT) {
+  function applyNormValue(id, normT) {
     const clamped = Math.max(0, Math.min(1, normT));
     const caps = store.capabilities || {};
 
@@ -228,7 +254,7 @@ export function initProDial() {
         const { min, max } = caps.colorTemperature;
         const val = Math.round(min + clamped * (max - min));
         store.setPro({ colorTemp: val, wbAuto: false });
-        await cameraService.applyAdvancedConstraint({ whiteBalanceMode: 'manual', colorTemperature: val });
+        applyHardwareThrottled({ whiteBalanceMode: 'manual', colorTemperature: val });
       } else {
         const val = Math.round(-50 + clamped * 100);
         store.setPro({ wbShift: val });
@@ -237,13 +263,13 @@ export function initProDial() {
       const { min, max } = caps.iso;
       const val = Math.round(min + clamped * (max - min));
       store.setPro({ iso: val, isoAuto: false });
-      await cameraService.applyAdvancedConstraint({ exposureMode: 'manual', iso: val });
+      applyHardwareThrottled({ exposureMode: 'manual', iso: val });
     } else if (id === 'ev') {
       if (caps.exposureCompensation) {
         const { min, max } = caps.exposureCompensation;
         const val = Number((min + clamped * (max - min)).toFixed(1));
         store.setPro({ ev: val, evAuto: false });
-        await cameraService.applyAdvancedConstraint({ exposureCompensation: val });
+        applyHardwareThrottled({ exposureCompensation: val });
       } else {
         const val = Number((0.5 + clamped * 1.3).toFixed(2));
         store.setPro({ brightness: val });
@@ -252,12 +278,12 @@ export function initProDial() {
       const { min, max } = caps.focusDistance;
       const val = Number((min + clamped * (max - min)).toFixed(2));
       store.setPro({ focus: val, focusAuto: false });
-      await cameraService.applyAdvancedConstraint({ focusMode: 'manual', focusDistance: val });
+      applyHardwareThrottled({ focusMode: 'manual', focusDistance: val });
     } else if (id === 's' && caps.exposureTime) {
       const { min, max } = caps.exposureTime;
       const val = Math.round(min + clamped * (max - min));
       store.setPro({ shutter: val, shutterAuto: false });
-      await cameraService.applyAdvancedConstraint({ exposureMode: 'manual', exposureTime: val });
+      applyHardwareThrottled({ exposureMode: 'manual', exposureTime: val });
     } else if (id === 'brt') {
       const val = Number((0.5 + clamped * 1.3).toFixed(2));
       store.setPro({ brightness: val });

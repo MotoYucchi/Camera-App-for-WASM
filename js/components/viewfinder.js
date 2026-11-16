@@ -119,12 +119,14 @@ export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, 
       });
     } else if (caps.exposureTime) {
       if (next === 'auto') {
+        store.setPro({ shutterAuto: true });
         await cameraService.applyAdvancedConstraint({ exposureMode: 'continuous' });
       } else {
         // Snap exposureTime to flicker-safe 1/100s (50Hz) or 1/120s (60Hz) when supported
         const targetSec = next === '50' ? 0.01 : 1 / 120;
         const unitVal = caps.exposureTime.max > 1 ? Math.round(targetSec * 10000) : targetSec;
         const clamped = Math.min(caps.exposureTime.max, Math.max(caps.exposureTime.min, unitVal));
+        store.setPro({ shutter: clamped, shutterAuto: false });
         await cameraService.applyAdvancedConstraint({ exposureMode: 'manual', exposureTime: clamped });
       }
     }
