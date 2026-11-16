@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WASM Camera Studio — WebRTC &amp; WebAssembly カメラアプリ</title>
+  <meta name="description" content="ブラウザ上の WebRTC と WebAssembly (FFmpeg.wasm) で完結する静的カメラアプリ。リア・フロントカメラ切替、マルチカメラ端末対応、写真・動画撮影、MP4/GIF/WebP/JPEG/PNG変換に対応。" />
+  <meta name="theme-color" content="#0d0f12" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/modals.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="brand-title">WASM Camera Studio</h1>
+            <p class="brand-subtitle" data-i18n="brand.subtitle">100% クライアントサイド WebRTC &amp; WebAssembly カメラスタジオ</p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <select id="lang-selector" class="select-control lang-select" aria-label="Language">
+            <option value="ja">日本語</option>
+            <option value="en">English</option>
+          </select>
+          <div id="wasm-status-badge" class="status-badge status-idle" title="FFmpeg WASM">
+            <span class="status-dot"></span>
+            <span id="wasm-status-text" data-i18n="wasm.idle">WASM 待機中</span>
+          </div>
+          <button id="btn-preload-wasm" class="btn btn-secondary btn-sm" type="button" data-i18n="header.preloadWasm">
+            WASM 事前読込
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- Camera Stage & Controls -->
+      <div class="camera-workspace">
+        <!-- Viewfinder Panel -->
+        <section class="panel viewfinder-panel" aria-label="Camera Viewfinder">
+          <div class="viewfinder-stage">
+            <video id="vf-video" class="viewfinder-video" autoplay playsinline muted></video>
+            <div id="vf-grid" class="grid-overlay"></div>
+
+            <div class="vf-hud-top">
+              <span id="vf-res-badge" class="vf-pill mono hidden">1920×1080</span>
+              <span id="vf-rec-badge" class="vf-pill vf-rec-pill mono hidden">
+                <span class="rec-dot"></span>
+                <span>REC</span>
+                <span id="vf-rec-time">00:00</span>
+              </span>
+            </div>
+
+            <div id="vf-countdown" class="countdown-overlay hidden">3</div>
+            <div id="vf-flash" class="flash-overlay"></div>
+
+            <div id="vf-placeholder" class="viewfinder-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              <p id="vf-placeholder-title" class="placeholder-title" data-i18n="vf.noCameraTitle">カメラを起動してください</p>
+              <p id="vf-placeholder-desc" class="placeholder-desc" data-i18n="vf.noCameraDesc">ブラウザのカメラ権限を許可すると、プレビューとマルチカメラ切り替えが有効になります。</p>
+              <button id="btn-start-camera" class="btn btn-primary" type="button" data-i18n="vf.startCamera">
+                カメラを起動
+              </button>
+            </div>
+          </div>
+
+          <div class="shutter-bar">
+            <div class="mode-tabs" role="tablist">
+              <button id="btn-mode-photo" class="mode-tab active" type="button" data-i18n="vf.modePhoto">写真</button>
+              <button id="btn-mode-video" class="mode-tab" type="button" data-i18n="vf.modeVideo">動画</button>
+            </div>
+
+            <div class="shutter-center">
+              <button id="btn-shutter" class="shutter-btn" type="button" disabled aria-label="Shutter">
+                <span class="shutter-inner"></span>
+              </button>
+            </div>
+
+            <button id="btn-switch-facing" class="btn btn-secondary btn-sm" type="button" disabled>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 2v6h-6" />
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                <path d="M3 22v-6h6" />
+                <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+              </svg>
+              <span data-i18n="vf.switchFacing">リア / フロント切替</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Controls Sidebar -->
+        <aside class="panel controls-panel" aria-label="Camera Controls">
+          <div class="control-section">
+            <span class="section-label" data-i18n="ctrl.cameraSection">カメラデバイス・切り替え</span>
+            <div class="field-group">
+              <label for="ctrl-device" class="field-label" data-i18n="ctrl.deviceLabel">使用カメラ (マルチカメラ対応)</label>
+              <div class="camera-switch-row">
+                <select id="ctrl-device" class="select-control" disabled></select>
+                <button id="btn-refresh-devices" class="btn btn-secondary btn-sm" type="button" data-i18n="ctrl.refreshDevices">再検出</button>
+              </div>
+            </div>
+
+            <button id="btn-ctrl-flip" class="btn btn-secondary btn-sm" type="button" disabled data-i18n="vf.switchFacing">
+              リア / フロント切替
+            </button>
+
+            <div class="control-grid-2">
+              <div class="field-group">
+                <label for="ctrl-resolution" class="field-label" data-i18n="ctrl.resolution">解像度</label>
+                <select id="ctrl-resolution" class="select-control"></select>
+              </div>
+              <div class="field-group">
+                <label for="ctrl-grid" class="field-label" data-i18n="ctrl.grid">グリッド表示</label>
+                <select id="ctrl-grid" class="select-control">
+                  <option value="none">OFF</option>
+                  <option value="thirds">3×3</option>
+                  <option value="cross">Cross</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="ctrl-timer" class="field-label" data-i18n="ctrl.timer">セルフタイマー</label>
+              <select id="ctrl-timer" class="select-control">
+                <option value="0">OFF</option>
+                <option value="3">3s</option>
+                <option value="5">5s</option>
+                <option value="10">10s</option>
+              </select>
+            </div>
+
+            <label class="toggle-row">
+              <span data-i18n="ctrl.mirror">プレビュー/撮影を左右反転</span>
+              <input id="ctrl-mirror" type="checkbox" />
+            </label>
+
+            <label class="toggle-row">
+              <span data-i18n="ctrl.audioMic">録画時にマイク音声を含める</span>
+              <input id="ctrl-audio" type="checkbox" />
+            </label>
+          </div>
+
+          <div class="control-section">
+            <span class="section-label" data-i18n="ctrl.filterSection">カラーフィルター</span>
+            <div id="ctrl-filter-chips" class="filter-chips"></div>
+          </div>
+
+          <div class="control-section">
+            <span class="section-label" data-i18n="ctrl.wasmSection">WASM 出力設定</span>
+            <div class="control-grid-2">
+              <div class="field-group">
+                <label for="ctrl-photo-format" class="field-label" data-i18n="ctrl.photoFormat">写真出力形式</label>
+                <select id="ctrl-photo-format" class="select-control"></select>
+              </div>
+              <div class="field-group">
+                <label for="ctrl-video-format" class="field-label" data-i18n="ctrl.videoFormat">動画変換形式 (録画後)</label>
+                <select id="ctrl-video-format" class="select-control"></select>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Captured Gallery -->
+      <section class="panel" aria-labelledby="gallery-heading">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h2 id="gallery-heading" class="panel-title" data-i18n="gallery.title">撮影ギャラリー</h2>
+            <span id="gallery-summary" class="panel-hint">0 件</span>
+          </div>
+          <div class="header-actions">
+            <button id="btn-download-zip" class="btn btn-success btn-sm" type="button" disabled data-i18n="gallery.downloadZip">
+              すべてZIP保存
+            </button>
+            <button id="btn-clear-gallery" class="btn btn-ghost btn-sm" type="button" disabled data-i18n="gallery.clearAll">
+              すべて削除
+            </button>
+          </div>
+        </div>
+
+        <div id="gallery-list" class="gallery-grid">
+          <div id="gallery-empty" class="empty-state" style="grid-column: 1 / -1;">
+            <p class="empty-state-title" data-i18n="gallery.emptyTitle">まだ撮影されたデータはありません</p>
+            <p class="empty-state-desc" data-i18n="gallery.emptyDesc">上のシャッターボタンで写真撮影または動画録画を行うと、ここに表示されます。</p>
+          </div>
+        </div>
+      </section>
+
+      <aside class="notice-strip" aria-label="Notice">
+        <div class="notice-strip-text">
+          <span class="notice-pill" data-i18n="notice.badge">トラッキングなし</span>
+          <span data-i18n="notice.text">映像・写真・音声の外部送信や解析Cookieは一切使用しません（言語設定の保存にのみCookieを使用）。すべての変換・処理はお使いの端末のブラウザ上（WebAssembly）で完結します。</span>
+        </div>
+        <a href="licenses.html" class="footer-link" data-i18n="notice.link">詳細・ライセンス表記 →</a>
+      </aside>
+    </main>
+
+    <footer class="app-footer">
+      <div class="footer-inner">
+        <span>WASM Camera Studio <strong>by MotoYucchi</strong> &mdash; Powered by WebRTC &amp; FFmpeg.wasm</span>
+        <div class="footer-links">
+          <span data-i18n="footer.privacy">端末完結処理 / 解析Cookie不使用</span>
+          <a href="licenses.html" class="footer-link" data-i18n="footer.licenses">ライセンス・ご利用上の注意</a>
+          <a href="https://github.com/MotoYucchi/Camera-App-for-WASM" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Preview & WASM Convert Modal -->
+  <div id="preview-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="preview-modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 id="preview-modal-title" class="modal-title">Preview</h3>
+          <p id="preview-modal-subtitle" class="modal-subtitle"></p>
+        </div>
+        <button id="btn-close-preview" class="icon-btn" type="button" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div id="preview-media-box" class="preview-media-box"></div>
+        <div class="wasm-convert-box">
+          <div class="wasm-convert-row">
+            <div class="field-group">
+              <label for="preview-target-format" class="field-label" data-i18n="modal.targetFormat">変換先フォーマット</label>
+              <select id="preview-target-format" class="select-control"></select>
+            </div>
+            <button id="btn-preview-convert" class="btn btn-primary" type="button" data-i18n="modal.convertBtn">
+              WASM で変換して保存用データを更新
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-close-preview-footer" class="btn btn-ghost" type="button" data-i18n="modal.closeBtn">閉じる</button>
+        <button id="btn-preview-download" class="btn btn-success" type="button" data-i18n="modal.downloadBtn">ダウンロード</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

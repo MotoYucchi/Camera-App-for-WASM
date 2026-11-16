@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ライセンス・ご利用上の注意 — WASM Camera Studio</title>
+  <meta name="theme-color" content="#0d0f12" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="brand-title">WASM Camera Studio</h1>
+            <p class="brand-subtitle">Licenses &amp; Privacy Notice</p>
+          </div>
+        </div>
+        <a href="index.html" class="btn btn-secondary btn-sm">&larr; アプリへ戻る</a>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title">プライバシー・Cookieless 設計</h2>
+        </div>
+        <p style="color: var(--text-secondary);">
+          本アプリは完全クライアントサイドで動作します。カメラ映像・写真・録画動画・音声が外部サーバーへ送信されることはありません。アクセス解析 Cookie やトラッキングも一切使用しません（言語設定の保存にのみ機能性 Cookie <code>wcs_lang</code> を使用します）。
+        </p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title">オープンソースライセンス表記</h2>
+        </div>
+        <ul style="color: var(--text-secondary); padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+          <li><strong>WASM Camera Studio</strong> — MIT License (MotoYucchi)</li>
+          <li><strong>@ffmpeg/ffmpeg (0.12.15)</strong> — MIT License</li>
+          <li><strong>@ffmpeg/util (0.12.2)</strong> — MIT License</li>
+          <li><strong>@ffmpeg/core (0.12.10)</strong> — GPL-2.0-or-later</li>
+          <li><strong>Google Fonts (Inter, Noto Sans JP, JetBrains Mono)</strong> — SIL Open Font License 1.1</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
