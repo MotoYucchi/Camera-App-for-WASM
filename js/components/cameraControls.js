@@ -87,7 +87,6 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
   });
   btnCloseSettings?.addEventListener('click', () => settingsOverlay.classList.add('hidden'));
 
-  btnOpenQuick?.addEventListener('click', () => quickBackdrop.classList.remove('hidden'));
   btnCloseQuick?.addEventListener('click', () => quickBackdrop.classList.add('hidden'));
   quickBackdrop?.addEventListener('click', (e) => {
     if (e.target === quickBackdrop) quickBackdrop.classList.add('hidden');

@@ -759,3 +759,121 @@
 .license-meta a:hover {
   text-decoration: underline;
 }
+
+/* Curved Pro Arc Dial Overlay (Viewfinder Bottom) */
+.pro-dial-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 16;
+  background: linear-gradient(to top, rgba(6, 8, 11, 0.92) 45%, rgba(6, 8, 11, 0.55) 80%, transparent 100%);
+  padding: 6px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.pro-dial-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pro-dial-readout {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  background: rgba(13, 15, 18, 0.78);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.pro-dial-arc-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  height: 76px;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+
+.pro-dial-arc-wrap:active {
+  cursor: grabbing;
+}
+
+.pro-dial-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.pro-dial-strip-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pro-dial-strip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pro-dial-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.pro-strip-item {
+  border: none;
+  background: transparent;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  transition: color var(--ease-fast);
+}
+
+.pro-strip-item.active {
+  color: var(--accent-primary);
+}
+
+.pro-strip-item.unsupported {
+  opacity: 0.45;
+}
+
+.pro-strip-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.pro-strip-val {
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.pro-close-pill {
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--accent-primary);
+  color: var(--accent-primary-text);
+  font-size: 11px;
+  font-weight: 700;
+}
+

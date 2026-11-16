@@ -2,6 +2,7 @@ import { PHOTO_FORMATS, VIDEO_FORMATS } from './constants/cameraConfig.js';
 import { initCameraControls } from './components/cameraControls.js';
 import { initGallery } from './components/gallery.js';
 import { initPreviewModal } from './components/previewModal.js';
+import { initProDial } from './components/proDial.js';
 import { initViewfinder } from './components/viewfinder.js';
 import { i18n, t } from './i18n/i18n.js';
 import { cameraService } from './services/cameraService.js';
@@ -30,6 +31,7 @@ function pickSupportedRecorderMime() {
 function initApp() {
   i18n.applyToDOM();
   initLongPressTooltips();
+  initProDial();
 
   const langSelector = document.getElementById('lang-selector');
   const statusBadge = document.getElementById('wasm-status-badge');

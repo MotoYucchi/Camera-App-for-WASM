@@ -147,6 +147,30 @@
           <!-- Floating Multi-Camera Lens Pill -->
           <div id="vf-lens-bar" class="vf-lens-bar hidden" aria-label="Multi-camera selector"></div>
 
+          <!-- Curved Pro Arc Dial Overlay -->
+          <div id="pro-dial-overlay" class="pro-dial-overlay hidden" aria-label="Pro Manual Dial">
+            <div class="pro-dial-header">
+              <span id="pro-dial-readout" class="pro-dial-readout">WB : AWB</span>
+              <button id="btn-pro-dial-auto" class="pro-auto-btn active" type="button">Auto</button>
+              <button id="btn-close-pro-dial" class="pro-close-pill" type="button">Pro &times;</button>
+            </div>
+            <div class="pro-dial-arc-wrap">
+              <svg id="pro-dial-svg" class="pro-dial-svg" viewBox="0 0 360 80">
+                <circle cx="180" cy="14" r="2.8" fill="#f1f4f8" />
+                <g id="pro-dial-ticks"></g>
+              </svg>
+            </div>
+            <div class="pro-dial-strip-row">
+              <div id="pro-dial-strip" class="pro-dial-strip"></div>
+              <button id="btn-pro-dial-reset" class="icon-btn icon-btn-round" type="button" style="width: 34px; height: 34px;" title="Reset">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
           <div id="vf-countdown" class="countdown-overlay hidden">3</div>
           <div id="vf-flash" class="flash-overlay"></div>
 
