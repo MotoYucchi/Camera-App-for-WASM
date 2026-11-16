@@ -9,6 +9,9 @@ class CameraStore {
     this.activeDeviceId = '';
     this.facingMode = 'environment'; // 'environment' | 'user'
     this.resolutionId = '1080p';
+    this.customWidth = 1920;
+    this.customHeight = 1080;
+    this.fps = 30; // 24 | 30 | 60
     this.gridMode = 'thirds'; // 'none' | 'thirds' | 'cross'
     this.timerSeconds = 0; // 0 | 3 | 5 | 10
     this.mirror = false;

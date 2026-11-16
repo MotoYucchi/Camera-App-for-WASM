@@ -83,13 +83,24 @@ function initApp() {
     onOpenGallery: () => gallery.openOverlay()
   });
 
-  async function activateCamera({ deviceId = '', facingMode = store.facingMode, resolutionId = store.resolutionId, includeAudio = store.includeAudio } = {}) {
+  async function activateCamera({
+    deviceId = '',
+    facingMode = store.facingMode,
+    resolutionId = store.resolutionId,
+    customWidth = store.customWidth,
+    customHeight = store.customHeight,
+    fps = store.fps,
+    includeAudio = store.includeAudio
+  } = {}) {
     store.setState({ cameraState: 'starting', cameraError: null });
     try {
       const res = await cameraService.startCamera({
         deviceId,
         facingMode,
         resolutionId,
+        customWidth,
+        customHeight,
+        fps,
         includeAudio
       });
       viewfinder.setStream(res.stream);
@@ -262,6 +273,18 @@ function initApp() {
       store.setState({ resolutionId });
       if (store.cameraState === 'active') {
         activateCamera({ deviceId: store.activeDeviceId, facingMode: store.facingMode, resolutionId });
+      }
+    },
+    onChangeFps: (fps) => {
+      store.setState({ fps });
+      if (store.cameraState === 'active') {
+        activateCamera({ deviceId: store.activeDeviceId, facingMode: store.facingMode, fps });
+      }
+    },
+    onApplyCustomResolution: (customWidth, customHeight) => {
+      store.setState({ resolutionId: 'manual', customWidth, customHeight });
+      if (store.cameraState === 'active') {
+        activateCamera({ deviceId: store.activeDeviceId, facingMode: store.facingMode, resolutionId: 'manual', customWidth, customHeight });
       }
     },
     onChangeAudio: (includeAudio) => {

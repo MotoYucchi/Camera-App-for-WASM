@@ -312,12 +312,12 @@
     </footer>
   </div>
 
-  <!-- 1. Bottom-Left: Photo Settings Bottom Sheet (Pixel Camera Style + "..." to Full Settings) -->
+  <!-- 1. Bottom-Left: Mode-Aware Settings Bottom Sheet (Photo settings / Video settings + "..." to Full Settings) -->
   <div id="settings-sheet-backdrop" class="sheet-backdrop hidden" role="dialog" aria-modal="true">
     <div class="bottom-sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-header">
-        <h3 class="sheet-title" data-i18n="sheet.settingsTitle">撮影設定</h3>
+        <h3 id="sheet-settings-title" class="sheet-title" data-i18n="sheet.photoTitle">写真設定</h3>
         <button id="btn-open-full-settings" class="more-dots-btn" type="button" data-tip-key="tip.moreSettings">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <circle cx="5" cy="12" r="2" />
@@ -327,74 +327,127 @@
         </button>
       </div>
 
-      <div class="setting-row">
-        <div class="setting-row-meta">
-          <span class="setting-row-label" data-i18n="ctrl.timer">タイマー</span>
-          <span id="sheet-timer-val" class="setting-row-val">OFF</span>
+      <!-- Photo Mode Rows -->
+      <div id="sheet-photo-rows" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="setting-row">
+          <div class="setting-row-meta">
+            <span class="setting-row-label" data-i18n="ctrl.timer">タイマー</span>
+            <span id="sheet-timer-val" class="setting-row-val">OFF</span>
+          </div>
+          <div class="pill-choices">
+            <button class="pill-choice" type="button" data-setting="timer" data-value="0">OFF</button>
+            <button class="pill-choice" type="button" data-setting="timer" data-value="3">3s</button>
+            <button class="pill-choice" type="button" data-setting="timer" data-value="5">5s</button>
+            <button class="pill-choice" type="button" data-setting="timer" data-value="10">10s</button>
+          </div>
         </div>
-        <div class="pill-choices">
-          <button class="pill-choice" type="button" data-setting="timer" data-value="0">OFF</button>
-          <button class="pill-choice" type="button" data-setting="timer" data-value="3">3s</button>
-          <button class="pill-choice" type="button" data-setting="timer" data-value="5">5s</button>
-          <button class="pill-choice" type="button" data-setting="timer" data-value="10">10s</button>
+
+        <div class="setting-row">
+          <div class="setting-row-meta">
+            <span class="setting-row-label" data-i18n="ctrl.grid">グリッド表示</span>
+            <span id="sheet-grid-val" class="setting-row-val">3×3</span>
+          </div>
+          <div class="pill-choices">
+            <button class="pill-choice" type="button" data-setting="grid" data-value="none">OFF</button>
+            <button class="pill-choice" type="button" data-setting="grid" data-value="thirds">3×3</button>
+            <button class="pill-choice" type="button" data-setting="grid" data-value="cross">+</button>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-row-meta">
+            <span class="setting-row-label" data-i18n="ctrl.mirror">左右反転</span>
+            <span id="sheet-mirror-val" class="setting-row-val">OFF</span>
+          </div>
+          <div class="pill-choices">
+            <button class="pill-choice" type="button" data-setting="mirror" data-value="false">OFF</button>
+            <button class="pill-choice" type="button" data-setting="mirror" data-value="true">ON</button>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-row-meta">
+            <span class="setting-row-label" data-i18n="ctrl.photoFormat">写真形式</span>
+            <span id="sheet-photo-fmt-val" class="setting-row-val">PNG</span>
+          </div>
+          <div class="pill-choices">
+            <button class="pill-choice" type="button" data-setting="photoFormat" data-value="png">PNG</button>
+            <button class="pill-choice" type="button" data-setting="photoFormat" data-value="jpeg">JPG</button>
+            <button class="pill-choice" type="button" data-setting="photoFormat" data-value="webp">WebP</button>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-row-meta">
+            <span class="setting-row-label" data-i18n="ctrl.resolution">解像度</span>
+            <span id="sheet-photo-res-val" class="setting-row-val">FHD</span>
+          </div>
+          <div class="pill-choices">
+            <button class="pill-choice" type="button" data-setting="resolution" data-value="1080p">FHD</button>
+            <button class="pill-choice" type="button" data-setting="resolution" data-value="2160p">4K</button>
+            <button class="pill-choice" type="button" data-setting="resolution" data-value="manual" title="Custom / Manual">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke-dasharray="3 2" />
+                <path d="M8 12h8M12 9v6" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
-      <div class="setting-row">
-        <div class="setting-row-meta">
-          <span class="setting-row-label" data-i18n="ctrl.grid">グリッド表示</span>
-          <span id="sheet-grid-val" class="setting-row-val">THIRDS</span>
+      <!-- Video Mode Rows (Pixel Video settings style) -->
+      <div id="sheet-video-rows" class="hidden" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="setting-row">
+          <div class="setting-row-meta">
+            <span class="setting-row-label" data-i18n="ctrl.resolution">解像度</span>
+            <span id="sheet-video-res-val" class="setting-row-val">1080p (Full HD)</span>
+          </div>
+          <div class="pill-choices">
+            <button class="pill-choice" type="button" data-setting="resolution" data-value="720p">HD</button>
+            <button class="pill-choice" type="button" data-setting="resolution" data-value="1080p">FHD</button>
+            <button class="pill-choice" type="button" data-setting="resolution" data-value="2160p">4K</button>
+            <button class="pill-choice" type="button" data-setting="resolution" data-value="manual" title="Custom / Manual">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke-dasharray="3 2" />
+                <path d="M8 12h8M12 9v6" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <div class="pill-choices">
-          <button class="pill-choice" type="button" data-setting="grid" data-value="none">OFF</button>
-          <button class="pill-choice" type="button" data-setting="grid" data-value="thirds">3×3</button>
-          <button class="pill-choice" type="button" data-setting="grid" data-value="cross">+</button>
-        </div>
-      </div>
 
-      <div class="setting-row">
-        <div class="setting-row-meta">
-          <span class="setting-row-label" data-i18n="ctrl.mirror">左右反転</span>
-          <span id="sheet-mirror-val" class="setting-row-val">OFF</span>
+        <div class="setting-row">
+          <div class="setting-row-meta">
+            <span class="setting-row-label" data-i18n="ctrl.fps">FPS</span>
+            <span id="sheet-fps-val" class="setting-row-val">30</span>
+          </div>
+          <div class="pill-choices">
+            <button class="pill-choice" type="button" data-setting="fps" data-value="24">24</button>
+            <button class="pill-choice" type="button" data-setting="fps" data-value="30">30</button>
+            <button class="pill-choice" type="button" data-setting="fps" data-value="60">60</button>
+          </div>
         </div>
-        <div class="pill-choices">
-          <button class="pill-choice" type="button" data-setting="mirror" data-value="false">OFF</button>
-          <button class="pill-choice" type="button" data-setting="mirror" data-value="true">ON</button>
-        </div>
-      </div>
 
-      <div class="setting-row">
-        <div class="setting-row-meta">
-          <span class="setting-row-label" data-i18n="ctrl.photoFormat">写真形式</span>
-          <span id="sheet-photo-fmt-val" class="setting-row-val">PNG</span>
+        <div class="setting-row">
+          <div class="setting-row-meta">
+            <span class="setting-row-label" data-i18n="ctrl.videoFormat">動画形式</span>
+            <span id="sheet-video-fmt-val" class="setting-row-val">MP4</span>
+          </div>
+          <div class="pill-choices">
+            <button class="pill-choice" type="button" data-setting="videoFormat" data-value="mp4">MP4</button>
+            <button class="pill-choice" type="button" data-setting="videoFormat" data-value="gif">GIF</button>
+            <button class="pill-choice" type="button" data-setting="videoFormat" data-value="webm">WebM</button>
+          </div>
         </div>
-        <div class="pill-choices">
-          <button class="pill-choice" type="button" data-setting="photoFormat" data-value="png">PNG</button>
-          <button class="pill-choice" type="button" data-setting="photoFormat" data-value="jpeg">JPG</button>
-          <button class="pill-choice" type="button" data-setting="photoFormat" data-value="webp">WebP</button>
-        </div>
-      </div>
 
-      <div class="setting-row">
-        <div class="setting-row-meta">
-          <span class="setting-row-label" data-i18n="ctrl.videoFormat">動画形式</span>
-          <span id="sheet-video-fmt-val" class="setting-row-val">MP4</span>
-        </div>
-        <div class="pill-choices">
-          <button class="pill-choice" type="button" data-setting="videoFormat" data-value="mp4">MP4</button>
-          <button class="pill-choice" type="button" data-setting="videoFormat" data-value="gif">GIF</button>
-          <button class="pill-choice" type="button" data-setting="videoFormat" data-value="webm">WebM</button>
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-row-meta">
-          <span class="setting-row-label" data-i18n="ctrl.audioMic">マイク音声</span>
-          <span id="sheet-audio-val" class="setting-row-val">OFF</span>
-        </div>
-        <div class="pill-choices">
-          <button class="pill-choice" type="button" data-setting="audio" data-value="false">OFF</button>
-          <button class="pill-choice" type="button" data-setting="audio" data-value="true">ON</button>
+        <div class="setting-row">
+          <div class="setting-row-meta">
+            <span class="setting-row-label" data-i18n="ctrl.audioMic">マイク音声</span>
+            <span id="sheet-audio-val" class="setting-row-val">OFF</span>
+          </div>
+          <div class="pill-choices">
+            <button class="pill-choice" type="button" data-setting="audio" data-value="false">OFF</button>
+            <button class="pill-choice" type="button" data-setting="audio" data-value="true">ON</button>
+          </div>
         </div>
       </div>
     </div>
@@ -539,6 +592,27 @@
             <select id="ctrl-resolution" class="select-control"></select>
           </div>
           <div class="field-group">
+            <label for="ctrl-fps" class="field-label" data-i18n="ctrl.fps">FPS</label>
+            <select id="ctrl-fps" class="select-control">
+              <option value="24">24 fps</option>
+              <option value="30">30 fps</option>
+              <option value="60">60 fps</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="custom-res-box" class="field-group hidden">
+          <span class="field-label" data-i18n="ctrl.customRes">カスタム解像度 (px)</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input id="ctrl-custom-width" type="number" min="160" max="7680" step="2" class="input-control mono" value="1920" placeholder="Width" />
+            <span>×</span>
+            <input id="ctrl-custom-height" type="number" min="120" max="4320" step="2" class="input-control mono" value="1080" placeholder="Height" />
+            <button id="btn-apply-custom-res" class="btn btn-primary btn-sm" type="button" data-i18n="ctrl.applyRes">適用</button>
+          </div>
+        </div>
+
+        <div class="sheet-grid-2">
+          <div class="field-group">
             <label for="ctrl-grid" class="field-label" data-i18n="ctrl.grid">グリッド表示</label>
             <select id="ctrl-grid" class="select-control">
               <option value="none">OFF</option>
@@ -546,15 +620,15 @@
               <option value="cross">Cross</option>
             </select>
           </div>
-        </div>
-        <div class="field-group">
-          <label for="ctrl-timer" class="field-label" data-i18n="ctrl.timer">タイマー</label>
-          <select id="ctrl-timer" class="select-control">
-            <option value="0">OFF</option>
-            <option value="3">3s</option>
-            <option value="5">5s</option>
-            <option value="10">10s</option>
-          </select>
+          <div class="field-group">
+            <label for="ctrl-timer" class="field-label" data-i18n="ctrl.timer">タイマー</label>
+            <select id="ctrl-timer" class="select-control">
+              <option value="0">OFF</option>
+              <option value="3">3s</option>
+              <option value="5">5s</option>
+              <option value="10">10s</option>
+            </select>
+          </div>
         </div>
         <label class="toggle-row">
           <span data-i18n="ctrl.mirror">左右反転</span>

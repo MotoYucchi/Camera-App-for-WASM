@@ -4,27 +4,32 @@ import { cameraService } from '../services/cameraService.js';
 import { store } from '../state/store.js';
 import { showToast } from '../utils/toast.js';
 
-export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchFacing, onChangeResolution, onChangeAudio }) {
-  // 1. Bottom-Left: Photo Settings Bottom Sheet (Pixel Camera style)
+export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchFacing, onChangeResolution, onChangeFps, onApplyCustomResolution, onChangeAudio }) {
+  // 1. Bottom-Left: Mode-Aware Settings Bottom Sheet (Pixel Camera style)
   const btnOpenSettings = document.getElementById('btn-open-settings');
   const settingsSheetBackdrop = document.getElementById('settings-sheet-backdrop');
+  const sheetSettingsTitle = document.getElementById('sheet-settings-title');
+  const sheetPhotoRows = document.getElementById('sheet-photo-rows');
+  const sheetVideoRows = document.getElementById('sheet-video-rows');
   const btnOpenFullFromSheet = document.getElementById('btn-open-full-settings');
 
-  // 2. Full-Screen Detailed Settings Overlay (opened via "..." in Photo Settings sheet)
+  // 2. Full-Screen Detailed Settings Overlay (opened via "..." in Settings sheet)
   const settingsOverlay = document.getElementById('settings-overlay');
   const btnCloseSettings = document.getElementById('btn-close-settings');
 
   // 3. Bottom-Right: Quick & Manual Pro Bottom Sheet
-  const btnOpenQuick = document.getElementById('btn-open-quick');
   const quickBackdrop = document.getElementById('quick-sheet-backdrop');
   const btnCloseQuick = document.getElementById('btn-close-quick');
   const btnResetPro = document.getElementById('btn-reset-pro');
 
-  // Photo Settings Sheet Elements
+  // Settings Sheet Value Labels
   const sheetTimerVal = document.getElementById('sheet-timer-val');
   const sheetGridVal = document.getElementById('sheet-grid-val');
   const sheetMirrorVal = document.getElementById('sheet-mirror-val');
   const sheetPhotoFmtVal = document.getElementById('sheet-photo-fmt-val');
+  const sheetPhotoResVal = document.getElementById('sheet-photo-res-val');
+  const sheetVideoResVal = document.getElementById('sheet-video-res-val');
+  const sheetFpsVal = document.getElementById('sheet-fps-val');
   const sheetVideoFmtVal = document.getElementById('sheet-video-fmt-val');
   const sheetAudioVal = document.getElementById('sheet-audio-val');
 
@@ -33,6 +38,11 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
   const btnRefresh = document.getElementById('btn-refresh-devices');
   const btnFlip = document.getElementById('btn-ctrl-flip');
   const resolutionSelect = document.getElementById('ctrl-resolution');
+  const fpsSelect = document.getElementById('ctrl-fps');
+  const customResBox = document.getElementById('custom-res-box');
+  const customWidthInput = document.getElementById('ctrl-custom-width');
+  const customHeightInput = document.getElementById('ctrl-custom-height');
+  const btnApplyCustomRes = document.getElementById('btn-apply-custom-res');
   const gridSelect = document.getElementById('ctrl-grid');
   const timerSelect = document.getElementById('ctrl-timer');
   const mirrorCheckbox = document.getElementById('ctrl-mirror');
@@ -92,7 +102,7 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
     if (e.target === quickBackdrop) quickBackdrop.classList.add('hidden');
   });
 
-  // Pill Choice Delegated Handlers in Photo Settings Sheet
+  // Pill Choice Delegated Handlers in Settings Sheet
   settingsSheetBackdrop?.addEventListener('click', (e) => {
     const btn = e.target.closest('.pill-choice');
     if (!btn) return;
@@ -103,6 +113,8 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
     if (setting === 'photoFormat') store.setState({ photoFormat: value });
     if (setting === 'videoFormat') store.setState({ videoFormat: value });
     if (setting === 'audio') onChangeAudio(value === 'true');
+    if (setting === 'resolution') onChangeResolution(value);
+    if (setting === 'fps') onChangeFps(Number(value));
   });
 
   // Populate static selects in Full-Screen Settings
@@ -129,6 +141,12 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
   btnRefresh.addEventListener('click', onRefreshDevices);
   btnFlip.addEventListener('click', onSwitchFacing);
   resolutionSelect.addEventListener('change', (e) => onChangeResolution(e.target.value));
+  fpsSelect?.addEventListener('change', (e) => onChangeFps(Number(e.target.value)));
+  btnApplyCustomRes?.addEventListener('click', () => {
+    const w = Math.max(160, Number(customWidthInput?.value) || 1920);
+    const h = Math.max(120, Number(customHeightInput?.value) || 1080);
+    onApplyCustomResolution(w, h);
+  });
   gridSelect.addEventListener('change', (e) => store.setState({ gridMode: e.target.value }));
   timerSelect.addEventListener('change', (e) => store.setState({ timerSeconds: Number(e.target.value) || 0 }));
   mirrorCheckbox.addEventListener('change', (e) => store.setState({ mirror: e.target.checked }));
@@ -226,11 +244,25 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
   }
 
   function sync() {
-    // Photo Settings Sheet Pill Highlights & Values
+    // Mode-aware Settings Bottom Sheet (Photo settings vs Video settings)
+    const isVideo = store.mode === 'video';
+    if (sheetSettingsTitle) {
+      sheetSettingsTitle.textContent = t(isVideo ? 'sheet.videoTitle' : 'sheet.photoTitle');
+    }
+    sheetPhotoRows?.classList.toggle('hidden', isVideo);
+    sheetVideoRows?.classList.toggle('hidden', !isVideo);
+
+    const resLabel = store.resolutionId === 'manual'
+      ? `Manual (${store.customWidth}×${store.customHeight})`
+      : (RESOLUTION_PRESETS.find((r) => r.id === store.resolutionId)?.label || store.resolutionId);
+
     if (sheetTimerVal) sheetTimerVal.textContent = store.timerSeconds === 0 ? 'OFF' : `${store.timerSeconds}s`;
     if (sheetGridVal) sheetGridVal.textContent = store.gridMode.toUpperCase();
     if (sheetMirrorVal) sheetMirrorVal.textContent = store.mirror ? 'ON' : 'OFF';
     if (sheetPhotoFmtVal) sheetPhotoFmtVal.textContent = (PHOTO_FORMATS[store.photoFormat]?.label || store.photoFormat).toUpperCase();
+    if (sheetPhotoResVal) sheetPhotoResVal.textContent = resLabel;
+    if (sheetVideoResVal) sheetVideoResVal.textContent = resLabel;
+    if (sheetFpsVal) sheetFpsVal.textContent = `${store.fps}`;
     if (sheetVideoFmtVal) sheetVideoFmtVal.textContent = (VIDEO_FORMATS[store.videoFormat]?.label || store.videoFormat).toUpperCase();
     if (sheetAudioVal) sheetAudioVal.textContent = store.includeAudio ? 'ON' : 'OFF';
 
@@ -243,6 +275,8 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
       if (setting === 'photoFormat') active = store.photoFormat === value;
       if (setting === 'videoFormat') active = store.videoFormat === value;
       if (setting === 'audio') active = String(store.includeAudio) === value;
+      if (setting === 'resolution') active = store.resolutionId === value;
+      if (setting === 'fps') active = String(store.fps) === value;
       btn.classList.toggle('active', active);
     });
 
@@ -267,6 +301,19 @@ export function initCameraControls({ onSelectDevice, onRefreshDevices, onSwitchF
     const locked = store.isRecording;
     deviceSelect.disabled = locked || store.devices.length === 0;
     resolutionSelect.disabled = locked;
+    if (fpsSelect) {
+      fpsSelect.disabled = locked;
+      fpsSelect.value = String(store.fps);
+    }
+    if (customResBox) {
+      customResBox.classList.toggle('hidden', store.resolutionId !== 'manual');
+    }
+    if (customWidthInput && document.activeElement !== customWidthInput) {
+      customWidthInput.value = store.customWidth;
+    }
+    if (customHeightInput && document.activeElement !== customHeightInput) {
+      customHeightInput.value = store.customHeight;
+    }
     audioCheckbox.disabled = locked;
     btnFlip.disabled = locked || store.cameraState !== 'active';
 

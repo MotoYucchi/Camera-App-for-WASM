@@ -35,7 +35,7 @@ class CameraService {
       }));
   }
 
-  buildVideoConstraints({ deviceId, facingMode, resolutionId }) {
+  buildVideoConstraints({ deviceId, facingMode, resolutionId, customWidth, customHeight, fps }) {
     const res = RESOLUTION_PRESETS.find((r) => r.id === resolutionId);
     const video = {};
 
@@ -45,15 +45,22 @@ class CameraService {
       video.facingMode = { ideal: facingMode };
     }
 
-    if (res && res.width && res.height) {
+    if (resolutionId === 'manual' && customWidth > 0 && customHeight > 0) {
+      video.width = { ideal: Number(customWidth) };
+      video.height = { ideal: Number(customHeight) };
+    } else if (res && res.width && res.height) {
       video.width = { ideal: res.width };
       video.height = { ideal: res.height };
+    }
+
+    if (fps && Number(fps) > 0) {
+      video.frameRate = { ideal: Number(fps) };
     }
 
     return video;
   }
 
-  async startCamera({ deviceId = '', facingMode = 'environment', resolutionId = '1080p', includeAudio = false } = {}) {
+  async startCamera({ deviceId = '', facingMode = 'environment', resolutionId = '1080p', customWidth = 1920, customHeight = 1080, fps = 30, includeAudio = false } = {}) {
     if (!this.isSecureContextOk()) {
       throw new Error(t('err.insecure'));
     }
@@ -63,7 +70,7 @@ class CameraService {
 
     this.stopStream();
 
-    const videoConstraints = this.buildVideoConstraints({ deviceId, facingMode, resolutionId });
+    const videoConstraints = this.buildVideoConstraints({ deviceId, facingMode, resolutionId, customWidth, customHeight, fps });
     let stream;
 
     try {

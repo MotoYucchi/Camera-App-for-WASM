@@ -3,7 +3,8 @@ export const RESOLUTION_PRESETS = [
   { id: '2160p', label: '4K (3840×2160)', width: 3840, height: 2160 },
   { id: '1080p', label: 'Full HD (1920×1080)', width: 1920, height: 1080 },
   { id: '720p', label: 'HD (1280×720)', width: 1280, height: 720 },
-  { id: '480p', label: 'SD (640×480)', width: 640, height: 480 }
+  { id: '480p', label: 'SD (640×480)', width: 640, height: 480 },
+  { id: 'manual', label: 'Manual (Custom)', width: null, height: null }
 ];
 
 export const FILTER_PRESETS = [
