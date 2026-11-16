@@ -1,4 +1,5 @@
 import { FILTER_PRESETS } from '../constants/cameraConfig.js';
+import { cameraService } from '../services/cameraService.js';
 import { store } from '../state/store.js';
 import { formatDuration } from '../utils/formatters.js';
 
@@ -55,9 +56,13 @@ export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, 
   const lensBarEl = document.getElementById('vf-lens-bar');
 
   const btnTopTimer = document.getElementById('btn-top-timer');
+  const badgeTopTimer = document.getElementById('badge-top-timer');
   const btnTopGrid = document.getElementById('btn-top-grid');
+  const badgeTopGrid = document.getElementById('badge-top-grid');
   const btnTopMirror = document.getElementById('btn-top-mirror');
   const btnTopNight = document.getElementById('btn-top-night');
+  const btnTopFlicker = document.getElementById('btn-top-flicker');
+  const badgeTopFlicker = document.getElementById('badge-top-flicker');
 
   const btnGalleryThumb = document.getElementById('btn-gallery-thumb');
   const btnSwitchFacing = document.getElementById('btn-switch-facing');
@@ -81,20 +86,48 @@ export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, 
     const cycle = [0, 3, 5, 10];
     const next = cycle[(cycle.indexOf(store.timerSeconds) + 1) % cycle.length];
     store.setState({ timerSeconds: next });
+    btnTopTimer.blur();
   });
 
   btnTopGrid?.addEventListener('click', () => {
     const cycle = ['none', 'thirds', 'cross'];
     const next = cycle[(cycle.indexOf(store.gridMode) + 1) % cycle.length];
     store.setState({ gridMode: next });
+    btnTopGrid.blur();
   });
 
   btnTopMirror?.addEventListener('click', () => {
     store.setState({ mirror: !store.mirror });
+    btnTopMirror.blur();
   });
 
   btnTopNight?.addEventListener('click', () => {
     store.setPro({ nightSight: !store.pro.nightSight });
+    btnTopNight.blur();
+  });
+
+  btnTopFlicker?.addEventListener('click', async () => {
+    const cycle = ['auto', '50', '60'];
+    const next = cycle[(cycle.indexOf(store.flickerMode) + 1) % cycle.length];
+    store.setState({ flickerMode: next });
+    btnTopFlicker.blur();
+
+    const caps = store.capabilities || {};
+    if (caps.powerLineFrequency) {
+      await cameraService.applyAdvancedConstraint({
+        powerLineFrequency: next === '50' ? '50Hz' : next === '60' ? '60Hz' : 'auto'
+      });
+    } else if (caps.exposureTime) {
+      if (next === 'auto') {
+        await cameraService.applyAdvancedConstraint({ exposureMode: 'continuous' });
+      } else {
+        // Snap exposureTime to flicker-safe 1/100s (50Hz) or 1/120s (60Hz) when supported
+        const targetSec = next === '50' ? 0.01 : 1 / 120;
+        const unitVal = caps.exposureTime.max > 1 ? Math.round(targetSec * 10000) : targetSec;
+        const clamped = Math.min(caps.exposureTime.max, Math.max(caps.exposureTime.min, unitVal));
+        await cameraService.applyAdvancedConstraint({ exposureMode: 'manual', exposureTime: clamped });
+      }
+    }
   });
 
   function renderLensBar() {
@@ -170,9 +203,24 @@ export function initViewfinder({ onStartCamera, onSwitchFacing, onSelectDevice, 
     if (store.gridMode === 'cross') gridEl.classList.add('grid-cross');
 
     btnTopTimer?.classList.toggle('active', store.timerSeconds > 0);
+    if (badgeTopTimer) {
+      badgeTopTimer.classList.toggle('hidden', store.timerSeconds === 0);
+      badgeTopTimer.textContent = `${store.timerSeconds}s`;
+    }
+
     btnTopGrid?.classList.toggle('active', store.gridMode !== 'none');
+    if (badgeTopGrid) {
+      badgeTopGrid.classList.toggle('hidden', store.gridMode === 'none');
+      badgeTopGrid.textContent = store.gridMode === 'thirds' ? '3×3' : '+';
+    }
+
     btnTopMirror?.classList.toggle('active', store.mirror);
     btnTopNight?.classList.toggle('active', store.pro.nightSight);
+
+    btnTopFlicker?.classList.toggle('active', store.flickerMode !== 'auto');
+    if (badgeTopFlicker) {
+      badgeTopFlicker.textContent = store.flickerMode === 'auto' ? 'Auto' : store.flickerMode;
+    }
 
     if (active && store.actualResolution) {
       resBadgeEl.textContent = store.actualResolution;

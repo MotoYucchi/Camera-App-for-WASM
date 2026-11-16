@@ -79,6 +79,8 @@
 
 /* 1:1 Square Icon Pictogram Button */
 .icon-btn {
+  position: relative;
+  overflow: hidden;
   width: 40px;
   height: 40px;
   aspect-ratio: 1 / 1;
@@ -89,14 +91,17 @@
   color: var(--text-primary);
   display: grid;
   place-items: center;
+  padding: 0;
   transition: all var(--ease-fast);
   user-select: none;
   -webkit-touch-callout: none;
 }
 
-.icon-btn:hover:not(:disabled) {
-  border-color: var(--border-strong);
-  background: rgba(35, 40, 51, 0.9);
+@media (hover: hover) {
+  .icon-btn:hover:not(:disabled) {
+    border-color: var(--border-strong);
+    background: rgba(35, 40, 51, 0.9);
+  }
 }
 
 .icon-btn.active {
@@ -106,12 +111,33 @@
 }
 
 .icon-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 19px;
+  height: 19px;
 }
 
 .icon-btn-round {
   border-radius: 50%;
+}
+
+.icon-corner-badge {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 1.5px 3px;
+  border-radius: 4px;
+  background: rgba(13, 15, 18, 0.88);
+  color: var(--text-primary);
+  pointer-events: none;
+  letter-spacing: -0.02em;
+}
+
+.icon-btn.active .icon-corner-badge {
+  background: var(--accent-primary);
+  color: var(--accent-primary-text);
 }
 
 .select-control,

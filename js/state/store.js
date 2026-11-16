@@ -13,6 +13,7 @@ class CameraStore {
     this.timerSeconds = 0; // 0 | 3 | 5 | 10
     this.mirror = false;
     this.includeAudio = false;
+    this.flickerMode = 'auto'; // 'auto' | '50' | '60'
     this.filterId = 'none';
     this.mode = 'photo'; // 'photo' | 'video'
     this.photoFormat = 'png';
